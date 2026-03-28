@@ -13,8 +13,7 @@ export default function IntroSection() {
             alt="fusao"
             width={400}
             height={100}
-            className="object-contain"
-            priority
+            className="object-contain w-auto h-auto"
           />
         </div>
         <div className="text-center md:text-left">

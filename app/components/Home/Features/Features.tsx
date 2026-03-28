@@ -1,6 +1,6 @@
 "use client";
 
-import { features } from "@/app/constants/constant";
+import { features } from "@/app/components/Home/constants/constant";
 
 export default function FeaturesSection() {
   return (

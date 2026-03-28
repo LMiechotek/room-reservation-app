@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { X } from "lucide-react";
-import { Navlinks } from "@/app/constants/constant";
+import { Navlinks } from "@/app/components/Home/constants/constant";
 
 type Props = {
   showNav: boolean;

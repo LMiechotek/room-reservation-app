@@ -1,5 +1,5 @@
-import FeaturesSection from "./Features/Features";
-import IntroSection from "./Intro Section/IntroSection";
+import FeaturesSection from "./Home/Features/Features";
+import IntroSection from "./Home/Intro Section/IntroSection";
 
 export default function Home() {
     return (

@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { Navlinks } from "@/app/constants/constant";
+import { Navlinks } from "@/app/components/Home/constants/constant";
 import Link from "next/link";
 import { Search, Menu } from "lucide-react";
 
