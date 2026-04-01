@@ -14,12 +14,31 @@ type Room = {
 export default function Rooms() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const userType = localStorage.getItem("userType");
+    setIsAdmin(userType === "admin_cpd");
+  }, []);
+
+  const handleReserve = (roomName: string) => {
+    const userType = localStorage.getItem("userType");
+
+    if (!userType) {
+      alert("Você precisa estar logado para fazer uma reserva.");
+      return;
+    }
+
+    setSelectedRoom(roomName);
+  };
 
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        console.log("API URL:", process.env.API_URL);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas?tipo_sala=sala_aula`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/salas?tipo_sala=sala_aula`
+        );
+
         const data = await response.json();
 
         const formattedRooms = data.map((room: any) => ({
@@ -68,9 +87,12 @@ export default function Rooms() {
             <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-lg transition">
               Buscar
             </button>
-                        <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-lg transition">
-              Nova sala +
-            </button>
+
+            {isAdmin && (
+              <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition">
+                Nova sala +
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -83,7 +105,7 @@ export default function Rooms() {
               name={room.name}
               capacity={room.capacity}
               status={room.status}
-              onReserve={setSelectedRoom}
+              onReserve={handleReserve}
             />
           ))}
         </div>

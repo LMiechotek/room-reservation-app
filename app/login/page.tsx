@@ -2,20 +2,72 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [rememberMe, setRememberMe] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    console.log({
-      email,
-      password,
-      rememberMe,
-    });
+    if (!email.trim()) {
+      alert("Informe o email");
+      return;
+    }
+
+    if (!password.trim()) {
+      alert("Informe a senha");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            senha: password,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "Erro ao fazer login");
+      }
+
+      const data = await response.json();
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userType", data.usuario.tipo);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", email);
+      }
+      const redirectPath =
+        data.usuario.tipo === "admin_cpd"
+          ? "/admin/users"
+          : "/rooms";
+
+      router.replace(redirectPath);
+      router.refresh();
+    } catch (error) {
+      console.error("Erro login:", error);
+      alert("Email ou senha inválidos");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +84,7 @@ export default function LoginPage() {
               priority
             />
           </div>
+
           <div className="flex justify-center">
             <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
               <div className="flex justify-center mb-6">
@@ -52,10 +105,10 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block mb-2 text-sm font-medium text-black">
-                    Email ou Usuário
+                    Email
                   </label>
                   <input
-                    type="text"
+                    type="email"
                     autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -87,19 +140,11 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg transition font-medium"
+                  disabled={loading}
+                  className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-gray-400 text-white py-3 rounded-lg transition font-medium"
                 >
-                  Entrar
+                  {loading ? "Entrando..." : "Entrar"}
                 </button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    className="text-sm text-blue-700 hover:underline"
-                  >
-                    Esqueceu a senha?
-                  </button>
-                </div>
               </form>
             </div>
           </div>

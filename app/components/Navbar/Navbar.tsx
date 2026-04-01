@@ -14,33 +14,44 @@ type Props = {
 export default function Navbar({ openNav }: Props) {
   const [navBg, setNavBg] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+
     const handleScroll = () => {
       setNavBg(window.scrollY >= 90);
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const updateLoginState = () => {
+      const token = localStorage.getItem("token");
+      setIsLoggedIn(!!token);
+    };
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
+    updateLoginState();
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("userType");
     setIsLoggedIn(false);
-    router.push("/login");
+    router.replace("/login");
   };
+
+  if (!mounted) return null;
 
   return (
     <div
-      className={`transition-all duration-200 h-[12vh] z-20 fixed w-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.15)] ${
+      className={`transition-all duration-200 h-20 z-20 fixed top-0 left-0 w-full bg-white shadow-sm ${
         navBg ? "border-b border-gray-300" : "border-b border-gray-100"
       }`}
     >
@@ -55,6 +66,7 @@ export default function Navbar({ openNav }: Props) {
             priority
           />
         </div>
+
         {pathname === "/" && (
           <div className="flex-1 mx-2 md:mx-4 lg:mx-8 max-w-md">
             <div className="relative w-full">
@@ -70,6 +82,7 @@ export default function Navbar({ openNav }: Props) {
             </div>
           </div>
         )}
+
         <div className="hidden xl:flex items-center space-x-10">
           {Navlinks.map((link) => {
             if (
@@ -85,7 +98,7 @@ export default function Navbar({ openNav }: Props) {
                 href={link.url}
                 className="text-base text-[#1E3A8A] hover:text-blue-600 font-medium transition-all duration-200"
               >
-                <p>{link.label}</p>
+                {link.label}
               </Link>
             );
           })}
@@ -99,6 +112,7 @@ export default function Navbar({ openNav }: Props) {
             </button>
           )}
         </div>
+
         <div className="xl:hidden">
           <button
             onClick={openNav}
