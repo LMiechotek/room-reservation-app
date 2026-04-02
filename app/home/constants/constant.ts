@@ -4,7 +4,7 @@ export const Navlinks = [
   { id: 1, url: "/rooms", label: "Salas" },
   { id: 2, url: "/laboratories", label: "Laboratórios" },
   { id: 3, url: "/reservations", label: "Reservas" },
-  { id: 4, url: "/login", label: "Login" },
+  { id: 4, url: "/login", label: "Login" }, // continua, Navbar filtra quando logado
 ];
 
 export const features = [
