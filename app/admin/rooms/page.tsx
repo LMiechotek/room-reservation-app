@@ -19,12 +19,14 @@ type Equipment = {
 
 type FormErrors = {
   roomName?: string;
+  block?: string;
   capacity?: string;
   type?: string;
 };
 
 export default function RoomsForm() {
   const [roomName, setRoomName] = useState("");
+  const [block, setBlock] = useState("");
   const [capacity, setCapacity] = useState("");
   const [type, setType] = useState<RoomType>("sala_aula");
   const [machines, setMachines] = useState("");
@@ -64,6 +66,10 @@ export default function RoomsForm() {
       newErrors.roomName = "O nome da sala é obrigatório";
     }
 
+    if (!block.trim()) {
+      newErrors.block = "O bloco é obrigatório";
+    }
+
     if (!capacity.trim()) {
       newErrors.capacity = "A capacidade é obrigatória";
     }
@@ -80,33 +86,54 @@ export default function RoomsForm() {
     if (!validateFields()) return;
 
     try {
-      const payload = {
+      // 1) cria a sala
+      const roomPayload = {
         nome_numero: roomName,
+        bloco: block,
         capacidade: Number(capacity),
         tipo_sala: type,
-        equipamentos_ids: equipmentsSelected,
-        maquinas: type === "laboratorio" ? Number(machines) : null,
       };
 
-      const response = await fetch(
+      const roomResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/salas`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(roomPayload),
         }
       );
 
-      if (!response.ok) {
+      if (!roomResponse.ok) {
         alert("Erro ao cadastrar sala");
         return;
+      }
+
+      const createdRoom = await roomResponse.json();
+      const roomId = createdRoom.id;
+
+      // 2) associa equipamentos
+      for (const equipmentId of equipmentsSelected) {
+        await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${roomId}/equipamentos`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              equipamento_id: equipmentId,
+              quantidade: 1,
+            }),
+          }
+        );
       }
 
       alert("Sala cadastrada com sucesso!");
 
       setRoomName("");
+      setBlock("");
       setCapacity("");
       setType("sala_aula");
       setMachines("");
@@ -154,10 +181,22 @@ export default function RoomsForm() {
               placeholder="Ex: Sala 101 ou Lab 02"
               className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.roomName && (
-              <p className="text-red-500 text-sm mt-1">{errors.roomName}</p>
-            )}
           </div>
+
+          <div>
+            <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+              <Building2 size={16} />
+              Bloco
+            </label>
+            <input
+              type="text"
+              value={block}
+              onChange={(e) => setBlock(e.target.value)}
+              placeholder="Ex: Bloco C"
+              className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <div>
             <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
               <Users size={16} />
@@ -170,11 +209,9 @@ export default function RoomsForm() {
               placeholder="Ex: 25"
               className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
             />
-            {errors.capacity && (
-              <p className="text-red-500 text-sm mt-1">{errors.capacity}</p>
-            )}
           </div>
-          <div className="md:col-span-2">
+
+          <div>
             <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
               <Building2 size={16} />
               Tipo da sala
@@ -188,6 +225,7 @@ export default function RoomsForm() {
               <option value="laboratorio">Laboratório</option>
             </select>
           </div>
+
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 mb-3 text-sm font-medium text-gray-700">
               <Monitor size={16} />
@@ -215,6 +253,7 @@ export default function RoomsForm() {
               ))}
             </div>
           </div>
+
           {type === "laboratorio" && (
             <div className="md:col-span-2">
               <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
@@ -230,6 +269,7 @@ export default function RoomsForm() {
               />
             </div>
           )}
+
           <button
             type="button"
             onClick={handleSubmit}
