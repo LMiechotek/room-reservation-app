@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { User, Laptop, Home, ArrowRight } from "lucide-react";
+import { User, Laptop, Home, ArrowRight, BookOpen } from "lucide-react";
 
 const adminFeatures = [
   {
@@ -25,6 +25,13 @@ const adminFeatures = [
     icon: Laptop,
     url: "/admin/equipment",
   },
+    {
+    id: 4,
+    title: "Reservas",
+    description: "Gerencie reservas de salas e organize a agenda.",
+    icon: BookOpen,
+    url: "/admin/reservations", 
+  },
 ];
 
 export default function AdminDashboard() {
@@ -39,7 +46,7 @@ export default function AdminDashboard() {
             Gerencie usuários, salas e equipamentos em um só lugar.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-8">
           {adminFeatures.map((feature) => {
             const Icon = feature.icon;
 
