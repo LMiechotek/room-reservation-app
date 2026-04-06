@@ -135,15 +135,27 @@ export default function AdminReservationPanel() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta reserva?")) return;
+  const handleCancel = async (id: string) => {
+    if (!confirm("Deseja realmente cancelar esta reserva?")) return;
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${id}`, { method: "DELETE" });
-      if (!response.ok) throw new Error();
-      toast.success("Reserva excluída!");
+      const usuarioId = localStorage.getItem("userId") || "admin";
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${id}/cancelar`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cancelado_por: usuarioId }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data?.message || "Erro ao cancelar reserva");
+      }
+
+      toast.success("Reserva cancelada com sucesso!");
       setReservations(reservations.filter((r) => r.id !== id));
-    } catch {
-      toast.error("Erro ao excluir reserva");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao cancelar reserva");
     }
   };
 
@@ -280,7 +292,7 @@ export default function AdminReservationPanel() {
           </div>
           <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-6">
             <h3 className="text-xl font-bold mb-2 text-gray-800">Reservas existentes</h3>
-            <p className="text-gray-500 mb-4">Visualize, edite ou exclua reservas cadastradas.</p>
+            <p className="text-gray-500 mb-4">Visualize, edite, exclua ou cancele reservas cadastradas.</p>
             {reservations.length === 0 ? (
               <p className="text-gray-500">Nenhuma reserva cadastrada.</p>
             ) : (
@@ -309,9 +321,9 @@ export default function AdminReservationPanel() {
                         </button>
                         <button
                           className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
-                          onClick={() => handleDelete(r.id)}
+                          onClick={() => handleCancel(r.id)}
                         >
-                          <X size={16} /> Excluir
+                          <X size={16} /> Cancelar
                         </button>
                       </div>
                     </li>
