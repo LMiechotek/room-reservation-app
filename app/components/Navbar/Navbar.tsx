@@ -7,42 +7,31 @@ import { Search, Menu, X } from "lucide-react";
 import MobileNav from "./MobileNavbar";
 import { Navlinks } from "@/app/home/constants/constant";
 import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const [navBg, setNavBg] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const pathname = usePathname();
   const router = useRouter();
+  const { user, logout } = useAuth();
+
+  const isLoggedIn = !!user;
+  const isAdmin = user?.tipo === "admin_cpd";
 
   useEffect(() => {
     setMounted(true);
-
     const handleScroll = () => setNavBg(window.scrollY >= 90);
-
-    const updateLoginState = () => {
-      const token = localStorage.getItem("token");
-      const userType = localStorage.getItem("userType");
-
-      setIsLoggedIn(!!token);
-      setIsAdmin(userType === "admin_cpd");
-    };
-
-    updateLoginState();
     window.addEventListener("scroll", handleScroll);
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userType");
-    setIsLoggedIn(false);
-    setIsAdmin(false);
+    logout();
     router.replace("/login");
   };
 
@@ -52,9 +41,7 @@ export default function Navbar() {
     <>
       <nav
         className={`fixed top-0 left-0 w-full z-50 transition-all duration-200 bg-white shadow-sm ${
-          navBg
-            ? "border-b border-gray-300"
-            : "border-b border-gray-100"
+          navBg ? "border-b border-gray-300" : "border-b border-gray-100"
         }`}
       >
         <div className="flex items-center justify-between h-20 w-[90%] mx-auto">
@@ -91,36 +78,27 @@ export default function Navbar() {
             <Link
               href="/"
               className={`text-base font-medium transition-all duration-200 ${
-                pathname === "/"
-                  ? "text-blue-600"
-                  : "text-[#1E3A8A] hover:text-blue-600"
+                pathname === "/" ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
               }`}
             >
               Início
             </Link>
 
             {Navlinks.map((link) => {
-              if (
-                link.url === "/login" &&
-                (isLoggedIn || pathname === "/login")
-              ) {
-                return null;
-              }
-
+              if (link.url === "/login" && (isLoggedIn || pathname === "/login")) return null;
               return (
                 <Link
                   key={link.id}
                   href={link.url}
                   className={`text-base font-medium transition-all duration-200 ${
-                    pathname === link.url
-                      ? "text-blue-600"
-                      : "text-[#1E3A8A] hover:text-blue-600"
+                    pathname === link.url ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
                   }`}
                 >
                   {link.label}
                 </Link>
               );
             })}
+
             {isAdmin && pathname !== "/admin" && (
               <Link
                 href="/admin"
@@ -141,16 +119,10 @@ export default function Navbar() {
           </div>
           <div className="xl:hidden">
             <button
-              onClick={() =>
-                setMobileMenuOpen(!mobileMenuOpen)
-              }
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-md text-[#1E3A8A] hover:text-blue-600 transition"
             >
-              {mobileMenuOpen ? (
-                <X size={28} />
-              ) : (
-                <Menu size={28} />
-              )}
+              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
         </div>

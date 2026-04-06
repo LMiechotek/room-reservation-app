@@ -122,6 +122,7 @@ export default function RoomDetailsPage() {
           {isAdmin && (
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <button
+                onClick={() => router.push(`/rooms/${id}/edit`)}
                 className="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl transition w-full sm:w-auto"
               >
                 <Pencil size={18} />

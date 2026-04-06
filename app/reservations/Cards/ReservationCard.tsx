@@ -1,84 +1,108 @@
 "use client";
 
 import {
-    CalendarDays,
-    Clock3,
-    BookOpen,
-    Building2,
-    BadgeInfo,
+  CalendarDays,
+  Clock3,
+  BookOpen,
+  Building2,
+  BadgeInfo,
 } from "lucide-react";
 
-type Props = {
-    roomName: string;
-    professor: string;
-    date: string;
-    turno: string;
-    lessonNumber: number;
-    motivo: string;
-    status: string;
+type Reservation = {
+  bloco: string;
+  nome_numero: string;
+  usuario_nome: string;
+  data: string;
+  hora_inicio: string;
+  hora_fim: string;
+  turno: string;
+  aula_numero: number;
+  motivo: string;
+  status: string;
 };
 
-export default function ReservationCard({
-    roomName,
-    professor,
-    date,
+type Props = {
+  reservation: Reservation;
+};
+
+export default function ReservationCard({ reservation }: Props) {
+  const {
+    bloco,
+    nome_numero,
+    usuario_nome,
+    data,
+    hora_inicio,
+    hora_fim,
     turno,
-    lessonNumber,
+    aula_numero,
     motivo,
     status,
-}: Props) {
-    const statusStyles = {
-        ativa: "bg-green-500 text-white",
-        aberta: "bg-blue-500 text-white",
-        concluida: "bg-gray-500 text-white",
-        cancelada: "bg-red-500 text-white",
-    };
+  } = reservation;
 
-    const statusColor =
-        statusStyles[status as keyof typeof statusStyles] ||
-        "bg-gray-500 text-white";
-    return (
-        <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-xl overflow-hidden cursor-pointer hover:scale-105 transition-transform ease-in-out duration-300">
-            <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-bold text-black">
-                    {roomName}
-                </h2>
+  const statusStyles = {
+    ativa: "bg-green-500 text-white",
+    aberta: "bg-blue-500 text-white",
+    concluida: "bg-gray-400 text-white",
+    cancelada: "bg-red-500 text-white",
+  };
 
-                <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColor}`}
-                >
-                    {status}
-                </span>
-            </div>
+  const statusColor =
+    statusStyles[status as keyof typeof statusStyles] || "bg-gray-500 text-white";
 
-            <div className="space-y-3 text-black">
-                <p className="flex items-center gap-2">
-                    <BookOpen size={18} />
-                    <strong>Professor:</strong> {professor}
-                </p>
+  const formattedDate = new Date(data).toLocaleDateString("pt-BR");
+  const formattedStartHour = hora_inicio.slice(0, 5);
+  const formattedEndHour = hora_fim.slice(0, 5);
 
-                <p className="flex items-center gap-2">
-                    <CalendarDays size={18} />
-                    <strong>Data:</strong> {date}
-                </p>
+  return (
+    <div className="bg-white rounded-3xl shadow-lg border border-gray-200 p-6 hover:shadow-2xl transition-transform transform hover:scale-105 ease-in-out duration-300">
+      <div className="flex justify-between items-center mb-5">
+        <h2 className="text-2xl font-bold text-gray-900">{`${bloco} - ${nome_numero}`}</h2>
+        <span
+          className={`px-4 py-1 rounded-full text-sm font-semibold uppercase ${statusColor}`}
+        >
+          {status}
+        </span>
+      </div>
 
-                <p className="flex items-center gap-2">
-                    <Clock3 size={18} />
-                    <strong>Turno:</strong> {turno}
-                </p>
-
-                <p className="flex items-center gap-2">
-                    <Building2 size={18} />
-                    <strong>Aula:</strong> {lessonNumber}
-                </p>
-
-                <p className="flex items-start gap-2">
-                    <BadgeInfo size={18} className="mt-1" />
-                    <span>
-                        <strong>Motivo:</strong> {motivo}
-                    </span>
-                </p>
-            </div>
+      <div className="space-y-3 text-gray-800">
+        <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-2">
+          <BookOpen size={20} className="text-blue-500" />
+          <span className="font-medium">
+            Professor: <span className="font-normal">{usuario_nome}</span>
+          </span>
         </div>
-    );
+
+        <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-2">
+          <CalendarDays size={20} className="text-green-500" />
+          <span className="font-medium">
+            Data & Horário:{" "}
+            <span className="font-normal">
+              {formattedDate} - {formattedStartHour} às {formattedEndHour}
+            </span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-2">
+          <Clock3 size={20} className="text-yellow-500" />
+          <span className="font-medium">
+            Turno: <span className="font-normal">{turno}</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-2">
+          <Building2 size={20} className="text-purple-500" />
+          <span className="font-medium">
+            Aula: <span className="font-normal">{aula_numero}</span>
+          </span>
+        </div>
+
+        <div className="flex items-start gap-3 bg-gray-50 rounded-lg p-2">
+          <BadgeInfo size={20} className="mt-1 text-pink-500" />
+          <span className="font-medium">
+            Motivo: <span className="font-normal">{motivo}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }

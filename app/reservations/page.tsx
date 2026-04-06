@@ -5,9 +5,12 @@ import ReservationCard from "./Cards/ReservationCard";
 
 type Reservation = {
   id: string;
-  sala_nome: string;
+  bloco: string;
+  nome_numero: string;
   usuario_nome: string;
   data: string;
+  hora_inicio: string;
+  hora_fim: string;
   turno: string;
   aula_numero: number;
   motivo: string;
@@ -30,7 +33,6 @@ export default function ReservationsPage() {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/reservas`
       );
-
       const data = await response.json();
 
       const userType = localStorage.getItem("userType");
@@ -40,22 +42,21 @@ export default function ReservationsPage() {
         userType === "admin_cpd"
           ? data
           : data.filter(
-              (reservation: any) =>
-                reservation.usuario_id === userId
+              (reservation: any) => reservation.usuario_id === userId
             );
-
-      const formatted = visibleReservations.map(
-        (reservation: any) => ({
-          id: reservation.id,
-          sala_nome: `${reservation.nome_numero} - ${reservation.bloco}`,
-          usuario_nome: reservation.usuario_nome,
-          data: reservation.data.slice(0, 10),
-          turno: reservation.turno,
-          aula_numero: reservation.aula_numero,
-          motivo: reservation.motivo,
-          status: reservation.status,
-        })
-      );
+      const formatted = visibleReservations.map((reservation: any) => ({
+        id: reservation.id,
+        bloco: reservation.bloco,
+        nome_numero: reservation.nome_numero,
+        usuario_nome: reservation.usuario_nome,
+        data: reservation.data.slice(0, 10),
+        hora_inicio: reservation.hora_inicio,
+        hora_fim: reservation.hora_fim,
+        turno: reservation.turno,
+        aula_numero: reservation.aula_numero,
+        motivo: reservation.motivo,
+        status: reservation.status,
+      }));
 
       setReservations(formatted);
       setFilteredReservations(formatted);
@@ -67,12 +68,8 @@ export default function ReservationsPage() {
   const handleSearch = () => {
     const filtered = reservations.filter((reservation) => {
       const matchSearch =
-        reservation.sala_nome
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        reservation.usuario_nome
-          .toLowerCase()
-          .includes(search.toLowerCase());
+        reservation.nome_numero.toLowerCase().includes(search.toLowerCase()) ||
+        reservation.usuario_nome.toLowerCase().includes(search.toLowerCase());
 
       const matchDate = date ? reservation.data === date : true;
 
@@ -121,19 +118,20 @@ export default function ReservationsPage() {
           </div>
         </div>
       </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10 px-4 md:px-0">
-        {filteredReservations.map((reservation) => (
-          <ReservationCard
-            key={reservation.id}
-            roomName={reservation.sala_nome}
-            professor={reservation.usuario_nome}
-            date={reservation.data}
-            turno={reservation.turno}
-            lessonNumber={reservation.aula_numero}
-            motivo={reservation.motivo}
-            status={reservation.status}
-          />
-        ))}
+        {filteredReservations.length > 0 ? (
+          filteredReservations.map((reservation) => (
+            <ReservationCard
+              key={reservation.id}
+              reservation={reservation} 
+            />
+          ))
+        ) : (
+          <p className="text-center col-span-full text-gray-700">
+            Nenhuma reserva encontrada.
+          </p>
+        )}
       </div>
     </div>
   );
