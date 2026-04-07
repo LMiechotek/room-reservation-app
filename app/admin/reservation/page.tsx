@@ -100,8 +100,7 @@ export default function AdminReservationPanel() {
       return;
     }
 
-    // Validação de conflito de horário
-    const conflito = reservations.find(
+    const conflict = reservations.find(
       (r) =>
         r.sala_id === selectedRoomId &&
         r.data === date &&
@@ -110,7 +109,7 @@ export default function AdminReservationPanel() {
         r.id !== editingId
     );
 
-    if (conflito) {
+    if (conflict) {
       toast.error(
         `Conflito de horário! A sala já está reservada para aula ${lessonNumber} no turno ${turno}.`
       );
@@ -250,7 +249,7 @@ export default function AdminReservationPanel() {
                   priority
                 />
               </div>
-              <h2 className="text-2xl font-bold mb-2 text-center text-gray-800">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#1E3A8A] text-center mb-2">
                 {editingId ? "Editar Reserva" : "Cadastro de Reserva"}
               </h2>
               <p className="text-gray-500 text-center mb-6">
