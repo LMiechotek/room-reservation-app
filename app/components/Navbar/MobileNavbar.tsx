@@ -5,16 +5,18 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { Navlinks } from "@/app/home/constants/constant";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext"; 
 
 type Props = {
   showNav: boolean;
   closeNav: () => void;
-  isLoggedIn: boolean;
-  isAdmin: boolean;
-  handleLogout: () => void;
 };
 
-export default function MobileNav({ showNav, closeNav, isLoggedIn, isAdmin, handleLogout }: Props) {
+export default function MobileNav({ showNav, closeNav }: Props) {
+  const { user, logout } = useAuth(); 
+  const isLoggedIn = !!user;
+  const isAdmin = user?.tipo === "admin_cpd";
+
   const pathname = usePathname();
 
   return (
@@ -38,6 +40,7 @@ export default function MobileNav({ showNav, closeNav, isLoggedIn, isAdmin, hand
             <X size={28} />
           </button>
         </div>
+
         <div className="flex flex-col space-y-6">
           {pathname !== "/" && (
             <Link
@@ -48,8 +51,10 @@ export default function MobileNav({ showNav, closeNav, isLoggedIn, isAdmin, hand
               Início
             </Link>
           )}
+
           {Navlinks.map((link) => {
-            if (link.url === "/login" && (isLoggedIn || pathname === "/login")) return null;
+            if (link.url === "/login" && (isLoggedIn || pathname === "/login"))
+              return null;
             return (
               <Link
                 key={link.id}
@@ -61,6 +66,7 @@ export default function MobileNav({ showNav, closeNav, isLoggedIn, isAdmin, hand
               </Link>
             );
           })}
+
           {isAdmin && (
             <Link
               href="/admin"
@@ -70,10 +76,11 @@ export default function MobileNav({ showNav, closeNav, isLoggedIn, isAdmin, hand
               Painel Administrativo
             </Link>
           )}
+
           {isLoggedIn && (
             <button
               onClick={() => {
-                handleLogout();
+                logout(); 
                 closeNav();
               }}
               className="text-lg text-red-600 font-medium"

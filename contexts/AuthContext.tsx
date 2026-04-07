@@ -10,19 +10,13 @@ type User = {
 type AuthContextType = {
   user: User | null;
   loading: boolean;
-  login: (user: User, token: string) => void;
+  login: (userData: User, token: string) => void;
   logout: () => void;
 };
 
-const AuthContext = createContext<AuthContextType>(
-  {} as AuthContextType
-);
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
-export function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -32,10 +26,7 @@ export function AuthProvider({
     const userType = localStorage.getItem("userType");
 
     if (token && userId && userType) {
-      setUser({
-        id: userId,
-        tipo: userType,
-      });
+      setUser({ id: userId, tipo: userType });
     }
 
     setLoading(false);
@@ -50,14 +41,14 @@ export function AuthProvider({
   }
 
   function logout() {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userType");
     setUser(null);
   }
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, logout }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

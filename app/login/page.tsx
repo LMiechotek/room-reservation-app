@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ToastContainer, toast } from 'react-toastify';
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login: authLogin } = useAuth(); 
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -20,7 +23,6 @@ export default function LoginPage() {
       toast.warning("Informe o email");
       return;
     }
-
     if (!password.trim()) {
       toast.warning("Informe a senha");
       return;
@@ -33,39 +35,34 @@ export default function LoginPage() {
         `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            senha: password,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, senha: password }),
         }
       );
 
       if (!response.ok) {
-        toast.error("Erro ao fazer login");
+        toast.error("Email ou senha inválidos");
+        return;
       }
 
       const data = await response.json();
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("userType", data.usuario.tipo);
-      localStorage.setItem("userId", data.usuario.id);
+      authLogin(
+        { id: data.usuario.id, tipo: data.usuario.tipo },
+        data.token
+      );
 
       if (rememberMe) {
         localStorage.setItem("rememberEmail", email);
       }
+
       const redirectPath =
-        data.usuario.tipo === "admin_cpd"
-          ? "/admin"
-          : "/rooms";
+        data.usuario.tipo === "admin_cpd" ? "/admin" : "/rooms";
 
       router.replace(redirectPath);
-      router.refresh();
     } catch (error) {
       console.error("Erro login:", error);
-      toast.error("Email ou senha inválidos");
+      toast.error("Erro ao fazer login");
     } finally {
       setLoading(false);
     }
@@ -152,8 +149,8 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-        </main >
-      </div >
+        </main>
+      </div>
     </>
   );
 }

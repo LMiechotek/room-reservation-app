@@ -17,7 +17,7 @@ export default function Navbar() {
 
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   const isLoggedIn = !!user;
   const isAdmin = user?.tipo === "admin_cpd";
@@ -26,7 +26,6 @@ export default function Navbar() {
     setMounted(true);
     const handleScroll = () => setNavBg(window.scrollY >= 90);
     window.addEventListener("scroll", handleScroll);
-
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pathname]);
 
@@ -35,7 +34,7 @@ export default function Navbar() {
     router.replace("/login");
   };
 
-  if (!mounted) return null;
+  if (!mounted || loading) return null;
 
   return (
     <>
@@ -57,6 +56,7 @@ export default function Navbar() {
               />
             </Link>
           </div>
+
           {pathname === "/" && (
             <div className="flex-1 mx-2 md:mx-4 lg:mx-8 max-w-md">
               <div className="relative w-full">
@@ -74,6 +74,7 @@ export default function Navbar() {
               </div>
             </div>
           )}
+
           <div className="hidden xl:flex items-center space-x-6 md:space-x-10">
             <Link
               href="/"
@@ -85,7 +86,7 @@ export default function Navbar() {
             </Link>
 
             {Navlinks.map((link) => {
-              if (link.url === "/login" && (isLoggedIn || pathname === "/login")) return null;
+              if (link.url === "/login" && isLoggedIn) return null;
               return (
                 <Link
                   key={link.id}
@@ -117,6 +118,7 @@ export default function Navbar() {
               </button>
             )}
           </div>
+
           <div className="xl:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
