@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Home, Users, Monitor, Cpu, Building2, Edit, X, List, Plus, Check } from "lucide-react";
+import { Home, Users, Monitor, Cpu, Building2, Edit, X, List, Plus, Save } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -308,7 +308,7 @@ export default function RoomsPanel() {
                   disabled={loading}
                   className="md:col-span-2 w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl transition font-semibold shadow-lg flex items-center justify-center gap-2"
                 >
-                  <Check size={18} /> {loading ? "Salvando..." : editingId ? "Salvar Alterações" : "Cadastrar Sala"}
+                  <Save size={18} /> {loading ? "Salvando..." : editingId ? "Salvar Alterações" : "Cadastrar Sala"}
                 </button>
               </div>
             </div>

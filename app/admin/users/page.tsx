@@ -14,6 +14,7 @@ import {
   Plus,
   Edit,
   Trash2,
+  Save
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -320,8 +321,9 @@ export default function UserPanel() {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="md:col-span-2 w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl transition font-semibold shadow-lg"
+                  className="md:col-span-2 w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl transition font-semibold shadow-lg flex items-center justify-center gap-2"
                 >
+                  <Save size={18} />
                   {editingId ? "Salvar Alterações" : "Cadastrar Usuário"}
                 </button>
               </div>
