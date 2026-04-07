@@ -32,6 +32,7 @@ type UserData = {
   nome: string;
   email: string;
   tipo: UserType;
+  ativo?: boolean;
 };
 
 export default function UserPanel() {
@@ -54,7 +55,10 @@ export default function UserPanel() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`);
         const data = await res.json();
-        setUsers(data);
+
+        const activeUsers = data.filter((u: UserData) => u.ativo !== false);
+        setUsers(activeUsers);
+        
       } catch (error) {
         console.error(error);
         toast.error("Não foi possível carregar os usuários");
