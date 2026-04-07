@@ -200,23 +200,46 @@ export default function AdminReservationPanel() {
     if (!confirm("Deseja realmente cancelar esta reserva?")) return;
 
     try {
-      const adminId = localStorage.getItem("userId") || "admin";
+      const token = localStorage.getItem("token");
+      const adminId = localStorage.getItem("userId");
+
+      if (!token) {
+        toast.error("Token não encontrado. Faça login novamente.");
+        return;
+      }
+
+      if (!adminId) {
+        toast.error("Usuário não identificado.");
+        return;
+      }
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${id}/cancelar`,
         {
           method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ cancelado_por: adminId }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            cancelado_por: adminId,
+          }),
         }
       );
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Erro ao cancelar reserva");
+        throw new Error(result?.message || "Erro ao cancelar reserva");
       }
 
       toast.success("Reserva cancelada!");
-      setReservations((prev) => prev.filter((r) => r.id !== id));
+
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, status: "cancelada" } : r
+        )
+      );
     } catch (error: any) {
       toast.error(error.message || "Erro ao cancelar");
     }
@@ -257,6 +280,7 @@ export default function AdminReservationPanel() {
               <List size={16} /> Lista
             </button>
           </div>
+
           {activeTab === "form" && (
             <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-8">
               <div className="flex justify-center mb-5">
@@ -355,6 +379,7 @@ export default function AdminReservationPanel() {
               </div>
             </div>
           )}
+
           {activeTab === "list" && (
             <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-6">
               <div className="mb-6">
@@ -462,11 +487,18 @@ export default function AdminReservationPanel() {
                           </button>
 
                           <button
-                            className="flex-1 flex items-center justify-center gap-2 bg-red-50 text-red-700 hover:bg-red-100 py-2 rounded-xl font-semibold transition"
+                            disabled={r.status === "cancelada"}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-semibold transition ${
+                              r.status === "cancelada"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-red-50 text-red-700 hover:bg-red-100"
+                            }`}
                             onClick={() => handleCancel(r.id)}
                           >
                             <X size={16} />
-                            Cancelar
+                            {r.status === "cancelada"
+                              ? "Cancelada"
+                              : "Cancelar"}
                           </button>
                         </div>
                       </li>
