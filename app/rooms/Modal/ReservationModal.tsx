@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { User, BookOpen, CalendarDays, Clock3, FileText } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
+import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
 
 type Props = {
@@ -26,7 +27,6 @@ export default function ReservationModal({ roomId, onClose }: Props) {
 
     try {
       const usuarioId = localStorage.getItem("userId");
-
       if (!usuarioId) {
         toast.error("Usuário não encontrado.");
         return;
@@ -72,17 +72,26 @@ export default function ReservationModal({ roomId, onClose }: Props) {
     <>
       <ToastContainer />
       <div
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+        className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
         onClick={handleBackgroundClick}
       >
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6">
-          <h2 className="text-2xl font-bold text-black mb-6 text-center">
-            Reservar Sala
-          </h2>
-
-          <div className="space-y-4">
+        <div className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]">
+          
+          <div className="flex flex-col items-center p-6 border-b border-gray-200">
+            <Image
+              src="/images/unespar.png"
+              alt="Logo UNESPAR"
+              width={110}
+              height={110}
+              className="object-contain w-20 sm:w-24 md:w-28 h-auto"
+            />
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#1E3A8A] mt-2">
+              Reservar Sala
+            </h2>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1 space-y-4">
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium text-black">
                 <User size={16} />
                 Nome do responsável
               </label>
@@ -94,7 +103,7 @@ export default function ReservationModal({ roomId, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium text-black">
                 <BookOpen size={16} />
                 Disciplina
               </label>
@@ -106,7 +115,7 @@ export default function ReservationModal({ roomId, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium text-black">
                 <CalendarDays size={16} />
                 Data
               </label>
@@ -118,7 +127,7 @@ export default function ReservationModal({ roomId, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium text-black">
                 <Clock3 size={16} />
                 Turno
               </label>
@@ -146,7 +155,7 @@ export default function ReservationModal({ roomId, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
+              <label className="flex items-center gap-2 mb-2 text-sm font-medium text-black">
                 <FileText size={16} />
                 Observação
               </label>
@@ -157,21 +166,20 @@ export default function ReservationModal({ roomId, onClose }: Props) {
                 rows={4}
               />
             </div>
-            <div className="flex gap-3 pt-2">
-              <button
-                onClick={handleSubmit}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition"
-              >
-                Confirmar
-              </button>
-
-              <button
-                onClick={onClose}
-                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
-              >
-                Cancelar
-              </button>
-            </div>
+          </div>
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            <button
+              onClick={handleSubmit}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg transition font-semibold"
+            >
+              Confirmar
+            </button>
+            <button
+              onClick={onClose}
+              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       </div>
