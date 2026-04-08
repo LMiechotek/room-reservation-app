@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import ReservationCard from "./Cards/ReservationCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 type Reservation = {
   id: string;
@@ -35,7 +37,7 @@ export default function ReservationsPage() {
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`, {
-        credentials: "include", 
+        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Falha ao buscar reservas");
@@ -92,55 +94,58 @@ export default function ReservationsPage() {
       : "Buscar sala...";
 
   return (
-    <div className="w-full min-h-screen">
-      <div className="relative w-full flex flex-col items-center justify-center px-4 md:px-16 pt-24 pb-10">
-        <div className="absolute inset-0 bg-linear-to-r from-blue-800 via-teal-400 to-teal-500"></div>
+    <>
+      <ToastContainer />
+      <div className="w-full min-h-screen">
+        <div className="relative w-full flex flex-col items-center justify-center px-4 md:px-16 pt-24 pb-10">
+          <div className="absolute inset-0 bg-linear-to-r from-blue-800 via-teal-400 to-teal-500"></div>
 
-        <div className="relative z-10 w-full max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-white text-center mb-6">
-            Reservas
-          </h1>
+          <div className="relative z-10 w-full max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold text-white text-center mb-6">
+              Reservas
+            </h1>
 
-          <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              placeholder={placeholder}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 px-4 py-2 rounded-lg outline-none bg-white"
-            />
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex flex-col md:flex-row gap-4">
+              <input
+                type="text"
+                placeholder={placeholder}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="flex-1 px-4 py-2 rounded-lg outline-none bg-white"
+              />
 
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="px-4 py-2 rounded-lg outline-none bg-white"
-            />
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="px-4 py-2 rounded-lg outline-none bg-white"
+              />
 
-            <button
-              onClick={handleSearch}
-              className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-xl transition"
-            >
-              Buscar
-            </button>
+              <button
+                onClick={handleSearch}
+                className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-xl transition"
+              >
+                Buscar
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10 px-4 md:px-0">
-        {filteredReservations.length > 0 ? (
-          filteredReservations.map((reservation) => (
-            <ReservationCard
-              key={reservation.id}
-              reservation={reservation}
-            />
-          ))
-        ) : (
-          <p className="text-center col-span-full text-gray-700">
-            Nenhuma reserva encontrada.
-          </p>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10 px-4 md:px-0">
+          {filteredReservations.length > 0 ? (
+            filteredReservations.map((reservation) => (
+              <ReservationCard
+                key={reservation.id}
+                reservation={reservation}
+              />
+            ))
+          ) : (
+            <p className="text-center col-span-full text-gray-700">
+              Nenhuma reserva encontrada.
+            </p>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
