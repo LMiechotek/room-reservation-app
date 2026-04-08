@@ -44,9 +44,7 @@ export default function Rooms() {
       try {
         const response = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
-          {
-            credentials: "include",
-          }
+          { credentials: "include" }
         );
 
         if (response.ok) {
@@ -56,9 +54,11 @@ export default function Rooms() {
         } else {
           setIsAdmin(false);
           setIsLoggedIn(false);
+          toast.warning("Você não está logado.");
         }
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
+        toast.error("Erro ao carregar informações do usuário.");
         setIsAdmin(false);
         setIsLoggedIn(false);
       }
@@ -119,7 +119,6 @@ export default function Rooms() {
       toast.info("Você precisa estar logado para fazer uma reserva.");
       return;
     }
-
     setSelectedRoomId(roomId);
   };
 
@@ -130,14 +129,11 @@ export default function Rooms() {
       .map((room) => {
         const roomReservations = reservations.filter(
           (reservation) =>
-            reservation.sala_id === room.id &&
-            reservation.status === "ativa"
+            reservation.sala_id === room.id && reservation.status === "ativa"
         );
 
         const hasConflict = roomReservations.some((reservation) => {
-          const sameDate =
-            reservation.data.slice(0, 10) === searchDate;
-
+          const sameDate = reservation.data.slice(0, 10) === searchDate;
           const sameTime = time
             ? time >= reservation.hora_inicio.slice(0, 5) &&
               time <= reservation.hora_fim.slice(0, 5)
@@ -148,9 +144,7 @@ export default function Rooms() {
 
         return {
           ...room,
-          status: (hasConflict
-            ? "reservada"
-            : "disponivel") as Room["status"],
+          status: (hasConflict ? "reservada" : "disponivel") as Room["status"],
         };
       })
       .filter((room) =>
@@ -161,6 +155,10 @@ export default function Rooms() {
       );
 
     setRooms(filteredRooms);
+
+    if (filteredRooms.length === 0) {
+      toast.info("Nenhuma sala encontrada para os filtros selecionados.");
+    }
   };
 
   const filteredRooms = rooms.filter((room) =>
