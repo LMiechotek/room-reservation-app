@@ -38,8 +38,24 @@ export default function RoomDetailsPage() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const userType = localStorage.getItem("userType");
-    setIsAdmin(userType === "admin_cpd");
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
+          { credentials: "include" }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setIsAdmin(data.tipo === "admin_cpd");
+        } else {
+          setIsAdmin(false);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setIsAdmin(false);
+      }
+    };
+    fetchUser();
   }, []);
 
   useEffect(() => {
@@ -75,9 +91,7 @@ export default function RoomDetailsPage() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}`,
-        {
-          method: "DELETE",
-        }
+        { method: "DELETE" }
       );
 
       if (!res.ok) {
@@ -151,9 +165,7 @@ export default function RoomDetailsPage() {
             <div className="flex lg:justify-end">
               <span
                 className={`inline-flex w-fit self-start px-4 py-2 rounded-full text-sm font-semibold ${
-                  room.ativo
-                    ? "bg-green-500 text-white"
-                    : "bg-red-500 text-white"
+                  room.ativo ? "bg-green-500 text-white" : "bg-red-500 text-white"
                 }`}
               >
                 {room.ativo ? "Ativa" : "Inativa"}
@@ -175,9 +187,7 @@ export default function RoomDetailsPage() {
                 <span className="font-semibold">Tipo</span>
               </div>
               <p className="text-xl sm:text-2xl font-bold mt-3">
-                {room.tipo_sala === "sala_aula"
-                  ? "Sala de Aula"
-                  : "Laboratório"}
+                {room.tipo_sala === "sala_aula" ? "Sala de Aula" : "Laboratório"}
               </p>
             </div>
 
@@ -186,15 +196,11 @@ export default function RoomDetailsPage() {
                 <Monitor />
                 <span className="font-semibold">Equipamentos</span>
               </div>
-              <p className="text-2xl font-bold mt-3">
-                {room.equipamentos.length}
-              </p>
+              <p className="text-2xl font-bold mt-3">{room.equipamentos.length}</p>
             </div>
           </div>
           <div className="mt-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-5">
-              Equipamentos da Sala
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-5">Equipamentos da Sala</h2>
 
             {room.equipamentos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -203,14 +209,10 @@ export default function RoomDetailsPage() {
                     key={eq.id}
                     className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-sm"
                   >
-                    <h3 className="font-bold text-lg text-gray-800 wrap-break-word">
-                      {eq.nome}
-                    </h3>
+                    <h3 className="font-bold text-lg text-gray-800 wrap-break-word">{eq.nome}</h3>
 
                     {eq.descricao && (
-                      <p className="text-gray-500 mt-2 wrap-break-word">
-                        {eq.descricao}
-                      </p>
+                      <p className="text-gray-500 mt-2 wrap-break-word">{eq.descricao}</p>
                     )}
 
                     <p className="mt-3 text-sm text-gray-700">
@@ -220,9 +222,7 @@ export default function RoomDetailsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">
-                Nenhum equipamento cadastrado.
-              </p>
+              <p className="text-gray-500">Nenhum equipamento cadastrado.</p>
             )}
           </div>
         </div>

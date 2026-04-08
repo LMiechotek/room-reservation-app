@@ -10,14 +10,32 @@ export default function FeaturesSection() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUserType =
-      localStorage.getItem("userType") || "";
-    setUserType(storedUserType);
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
+          {
+            credentials: "include", 
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserType(data.tipo); 
+        } else {
+          setUserType(""); 
+        }
+      } catch (error) {
+        console.error("Erro ao buscar usuário:", error);
+        setUserType("");
+      }
+    };
+
+    fetchUser();
   }, []);
 
   const visibleFeatures = features.filter(
-    (feature) =>
-      !feature.adminOnly || userType === "admin_cpd"
+    (feature) => !feature.adminOnly || userType === "admin_cpd"
   );
 
   return (

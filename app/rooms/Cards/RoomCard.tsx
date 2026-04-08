@@ -10,6 +10,7 @@ type RoomProps = {
   capacity: number;
   status: "disponivel" | "ocupada" | "reservada";
   onReserve: (roomId: string) => void;
+  isLoggedIn: boolean;
 };
 
 export default function RoomCard({
@@ -18,6 +19,7 @@ export default function RoomCard({
   capacity,
   status,
   onReserve,
+  isLoggedIn,
 }: RoomProps) {
   const router = useRouter();
 
@@ -40,15 +42,12 @@ export default function RoomCard({
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-xl hover:scale-105 transition-transform ease-in-out duration-300 cursor-pointer flex flex-col justify-between">
       
-      {/* Cabeçalho */}
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold text-black">{name}</h2>
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[status]}`}>
           {statusLabel[status]}
         </span>
       </div>
-
-      {/* Informações */}
       <div className="space-y-3 text-black">
         <p className="flex items-center gap-2">
           <Users size={18} className="text-green-600" />
@@ -59,10 +58,8 @@ export default function RoomCard({
           <strong>Tipo de sala:</strong> {status === "disponivel" ? "Aula" : statusLabel[status]}
         </p>
       </div>
-
-      {/* Botões */}
       <div className={`flex gap-3 mt-6 ${status === "disponivel" ? "" : "justify-center"}`}>
-        {status === "disponivel" && (
+        {isLoggedIn && status === "disponivel" && (
           <button
             onClick={() => onReserve(id)}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium text-sm transition flex-1"

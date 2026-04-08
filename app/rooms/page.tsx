@@ -38,6 +38,11 @@ export default function Rooms() {
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [roomFilter, setRoomFilter] = useState<RoomFilter>("todos");
+  const [mounted, setMounted] = useState(false); 
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -82,7 +87,6 @@ export default function Rooms() {
       const reservationsData = await reservationsResponse.json();
 
       const today = new Date().toISOString().slice(0, 10);
-
       setReservations(reservationsData);
 
       const formattedRooms: Room[] = roomsData.map((room: any) => {
@@ -167,7 +171,7 @@ export default function Rooms() {
 
   return (
     <>
-      <ToastContainer />
+      {mounted && <ToastContainer />} {/* <-- Renderiza só no client */}
 
       <div className="w-full min-h-screen">
         <div className="relative w-full flex flex-col items-center justify-center overflow-visible px-4 md:px-16 pt-24 pb-10 md:pt-28 md:pb-12">
@@ -270,6 +274,7 @@ export default function Rooms() {
                 capacity={room.capacity}
                 status={room.status}
                 onReserve={handleReserve}
+                isLoggedIn={isLoggedIn} 
               />
             ))}
           </div>
