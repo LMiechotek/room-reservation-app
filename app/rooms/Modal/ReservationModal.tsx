@@ -247,7 +247,7 @@ export default function ReservationModal({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
+              className="flex-1 border bg-red-500 hover:bg-red-600 text-white border-gray-300 py-2 rounded-lg  transition"
             >
               Cancelar
             </button>
