@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login: authLogin } = useAuth(); 
+  const { login: authLogin } = useAuth();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -37,6 +37,7 @@ export default function LoginPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, senha: password }),
+          credentials: "include", 
         }
       );
 
@@ -47,19 +48,15 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      authLogin(
-        { id: data.usuario.id, tipo: data.usuario.tipo },
-        data.token
-      );
+      authLogin({ id: data.usuario.id, tipo: data.usuario.tipo });
 
-      if (rememberMe) {
-        localStorage.setItem("rememberEmail", email);
-      }
+      if (rememberMe) localStorage.setItem("rememberEmail", email);
 
       const redirectPath =
         data.usuario.tipo === "admin_cpd" ? "/admin" : "/rooms";
 
       router.replace(redirectPath);
+      toast.success("Login realizado com sucesso!");
     } catch (error) {
       console.error("Erro login:", error);
       toast.error("Erro ao fazer login");

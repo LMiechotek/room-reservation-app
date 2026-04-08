@@ -8,6 +8,7 @@ import MobileNav from "./MobileNavbar";
 import { Navlinks } from "@/app/home/constants/constant";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "react-toastify";
 
 export default function Navbar() {
   const [navBg, setNavBg] = useState(false);
@@ -30,9 +31,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [pathname]);
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/login");
+  const handleLogout = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
+        {
+          method: "POST",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) throw new Error("Falha ao fazer logout");
+
+      logout(); 
+      router.replace("/login");
+      toast.success("Logout realizado com sucesso!");
+    } catch (error: any) {
+      console.error("Erro no logout:", error);
+      toast.error(`Erro ao sair: ${error.message}`);
+    }
   };
 
   if (!mounted) return null;
@@ -57,6 +74,7 @@ export default function Navbar() {
               />
             </Link>
           </div>
+
           {pathname === "/" && (
             <div className="flex-1 mx-2 md:mx-4 lg:mx-8 max-w-md">
               <div className="relative w-full">
@@ -74,6 +92,7 @@ export default function Navbar() {
               </div>
             </div>
           )}
+
           <div className="hidden xl:flex items-center space-x-6 md:space-x-10">
             <Link
               href="/"
@@ -91,7 +110,9 @@ export default function Navbar() {
                   key={link.id}
                   href={link.url}
                   className={`text-base font-medium transition-all duration-200 ${
-                    pathname === link.url ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
+                    pathname === link.url
+                      ? "text-blue-600"
+                      : "text-[#1E3A8A] hover:text-blue-600"
                   }`}
                 >
                   {link.label}
@@ -117,6 +138,7 @@ export default function Navbar() {
               </button>
             )}
           </div>
+
           <div className="xl:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -128,10 +150,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <MobileNav
-        showNav={mobileMenuOpen}
-        closeNav={() => setMobileMenuOpen(false)}
-      />
+      <MobileNav showNav={mobileMenuOpen} closeNav={() => setMobileMenuOpen(false)} />
 
       <div className="h-20" />
     </>
