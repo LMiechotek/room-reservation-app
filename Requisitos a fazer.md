@@ -7,7 +7,7 @@
 
 # app/rooms
 - [x] retirar campo edição de nome do responsável do usuário professor
-- [ ] retirar campo de observação
+- [x] retirar campo de observação
 - [ ] retirar botão de reserva caso não esteja logado
 - [ ] incluir campo de horário da aula no modal de reserva
 - [ ] 
