@@ -1,5 +1,5 @@
 # app/admin/rooms
-- [ ] opção de cadastrar quantidade de equipamentos na criação e edição da sala 
+- [x] opção de cadastrar quantidade de equipamentos na criação e edição da sala 
 - [ ] 
 # app/admin/reservation 
 - [ ] retirar campo de observação

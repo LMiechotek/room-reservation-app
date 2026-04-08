@@ -26,7 +26,7 @@ export default function RoomsPanel() {
   const [activeTab, setActiveTab] = useState<"form" | "list">("form");
   const [rooms, setRooms] = useState<Room[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
-  const [equipmentsSelected, setEquipmentsSelected] = useState<string[]>([]);
+  const [equipmentsSelected, setEquipmentsSelected] = useState<{ [key: string]: number }>({});
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -68,15 +68,28 @@ export default function RoomsPanel() {
     setCapacity("");
     setType("sala_aula");
     setMachines("");
-    setEquipmentsSelected([]);
+    setEquipmentsSelected({});
     setEditingId(null);
     setErrors({});
   };
 
   const toggleEquipment = (id: string) => {
-    setEquipmentsSelected((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+    setEquipmentsSelected((prev) => {
+      const newSelected = { ...prev };
+      if (newSelected[id]) {
+        delete newSelected[id];
+      } else {
+        newSelected[id] = 1; 
+      }
+      return newSelected;
+    });
+  };
+
+  const updateEquipmentQuantity = (id: string, qty: number) => {
+    setEquipmentsSelected((prev) => ({
+      ...prev,
+      [id]: qty,
+    }));
   };
 
   const validateFields = () => {
@@ -116,11 +129,11 @@ export default function RoomsPanel() {
       if (!res.ok) throw new Error("Erro ao salvar sala");
       const savedRoom = await res.json();
 
-      for (const eqId of equipmentsSelected) {
+      for (const eqId in equipmentsSelected) {
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas/${savedRoom.id}/equipamentos`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ equipamento_id: eqId, quantidade: 1 }),
+          body: JSON.stringify({ equipamento_id: eqId, quantidade: equipmentsSelected[eqId] }),
         });
       }
 
@@ -147,7 +160,12 @@ export default function RoomsPanel() {
     setCapacity(String(room.capacidade));
     setType(room.tipo_sala);
     setMachines(room.quantidade_pcs ? String(room.quantidade_pcs) : "");
-    setEquipmentsSelected(room.equipamentos?.map((e) => e.id) || []);
+    setEquipmentsSelected(
+      room.equipamentos?.reduce((acc, eq) => {
+        acc[eq.id] = 1; 
+        return acc;
+      }, {} as { [key: string]: number }) || {}
+    );
     setEditingId(room.id);
     setActiveTab("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -225,6 +243,7 @@ export default function RoomsPanel() {
                     className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
                     <Building2 size={16} /> Bloco
@@ -237,6 +256,7 @@ export default function RoomsPanel() {
                     className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
                     <Users size={16} /> Capacidade
@@ -249,6 +269,7 @@ export default function RoomsPanel() {
                     className="w-full border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
+
                 <div>
                   <label className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
                     <Building2 size={16} /> Tipo da sala
@@ -271,18 +292,29 @@ export default function RoomsPanel() {
                       <label
                         key={item.id}
                         className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${
-                          equipmentsSelected.includes(item.id)
+                          equipmentsSelected[item.id]
                             ? "border-blue-500 bg-blue-50"
                             : "border-gray-200 hover:bg-gray-50"
                         }`}
                       >
                         <input
                           type="checkbox"
-                          checked={equipmentsSelected.includes(item.id)}
+                          checked={!!equipmentsSelected[item.id]}
                           onChange={() => toggleEquipment(item.id)}
                           className="accent-blue-600"
                         />
                         <span className="text-sm text-gray-700">{item.nome}</span>
+                        {equipmentsSelected[item.id] && (
+                          <input
+                            type="number"
+                            value={equipmentsSelected[item.id]}
+                            min={1}
+                            onChange={(e) =>
+                              updateEquipmentQuantity(item.id, Math.max(1, Number(e.target.value)))
+                            }
+                            className="w-16 border rounded px-2 py-1 text-sm"
+                          />
+                        )}
                       </label>
                     ))}
                   </div>
@@ -313,6 +345,7 @@ export default function RoomsPanel() {
               </div>
             </div>
           )}
+
           {activeTab === "list" && (
             <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-6">
               <h3 className="text-xl font-bold mb-4 text-gray-800">Salas cadastradas</h3>

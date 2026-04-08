@@ -41,7 +41,7 @@ export default function RoomCard({
 
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 p-6 hover:shadow-xl hover:scale-105 transition-transform ease-in-out duration-300 cursor-pointer flex flex-col justify-between">
-      
+
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-xl font-bold text-black">{name}</h2>
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusStyles[status]}`}>
@@ -58,11 +58,14 @@ export default function RoomCard({
           <strong>Tipo de sala:</strong> {status === "disponivel" ? "Aula" : statusLabel[status]}
         </p>
       </div>
-      <div className={`flex gap-3 mt-6 ${status === "disponivel" ? "" : "justify-center"}`}>
+      <div
+        className={`flex gap-3 mt-6 ${status !== "disponivel" || !isLoggedIn ? "justify-center" : ""
+          }`}
+      >
         {isLoggedIn && status === "disponivel" && (
           <button
             onClick={() => onReserve(id)}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium text-sm transition flex-1"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl font-medium text-sm transition w-1/2"
           >
             Reservar
           </button>
@@ -70,7 +73,10 @@ export default function RoomCard({
 
         <button
           onClick={handleViewDetails}
-          className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium text-sm transition ${status !== "disponivel" ? "w-1/2 text-center" : "flex-1"}`}
+          className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl font-medium text-sm transition ${status !== "disponivel" || !isLoggedIn
+              ? "w-1/2 text-center"
+              : "w-1/2"
+            }`}
         >
           Ver detalhes
         </button>
