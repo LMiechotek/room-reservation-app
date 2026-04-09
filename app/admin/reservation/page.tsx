@@ -128,7 +128,7 @@ export default function AdminReservationPanel() {
           r.sala_id === selectedRoomId &&
           r.data.slice(0, 10) === date &&
           r.turno === turno &&
-          r.status !== "cancelada" &&
+          (r.status === "ativa" || r.status === "aberta") &&
           r.id !== editingId
       )
       .map((r) => r.aula_numero);

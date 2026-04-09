@@ -117,7 +117,7 @@ export default function EditReservationPage() {
               r.sala_id === salaId &&
               r.data.slice(0, 10) === date &&
               r.turno === turno &&
-              r.status !== "cancelada" &&
+              (r.status === "ativa" || r.status === "aberta") &&
               r.id !== id
           )
           .map((r) => r.aula_numero);
