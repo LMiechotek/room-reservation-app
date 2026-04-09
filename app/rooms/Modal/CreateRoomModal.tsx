@@ -3,8 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { Home, Users, Monitor, Cpu, Building2 } from "lucide-react";
-import "react-toastify/dist/ReactToastify.css";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 
 type RoomType = "sala_aula" | "laboratorio";
 
@@ -168,8 +167,6 @@ export default function CreateRoomModal({ onClose, onCreated }: Props) {
 
   return (
     <>
-      <ToastContainer />
-
       <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-2 sm:p-4">
         <div
           ref={modalRef}

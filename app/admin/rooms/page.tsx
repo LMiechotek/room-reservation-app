@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Home, Users, Monitor, Cpu, Building2, Edit, X, List, Plus, Save } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type RoomType = "sala_aula" | "laboratorio";
 
@@ -187,7 +186,6 @@ export default function RoomsPanel() {
 
   return (
     <>
-      <ToastContainer />
       <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 py-10">
         <div className="max-w-5xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">

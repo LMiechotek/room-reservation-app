@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import ReservationCard from "./Cards/ReservationCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type Reservation = {
   id: string;
@@ -95,7 +95,6 @@ export default function ReservationsPage() {
 
   return (
     <>
-      <ToastContainer />
       <div className="w-full min-h-screen">
         <div className="relative w-full flex flex-col items-center justify-center px-4 md:px-16 pt-24 pb-10">
           <div className="absolute inset-0 bg-linear-to-r from-blue-800 via-teal-400 to-teal-500"></div>
@@ -127,6 +126,13 @@ export default function ReservationsPage() {
               >
                 Buscar
               </button>
+
+              <Link
+                href="/admin/reservation"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition text-center"
+              >
+                Nova reserva
+              </Link>
             </div>
           </div>
         </div>

@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { User, BookOpen, CalendarDays, Clock3 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import Image from "next/image";
-import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Props = {
@@ -35,6 +34,14 @@ export default function ReservationModal({
   const [loading, setLoading] = useState(false);
 
   const isAdmin = user?.tipo === "admin_cpd";
+
+  const today = new Date().toISOString().split("T")[0];
+  const lastDayOfMonth = (() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0)
+      .toISOString()
+      .split("T")[0];
+  })();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -89,6 +96,16 @@ export default function ReservationModal({
       return;
     }
 
+    if (date < today) {
+      toast.warning("Não é possível reservar em datas passadas.");
+      return;
+    }
+
+    if (!isAdmin && date > lastDayOfMonth) {
+      toast.warning("Professores só podem reservar dentro do mês corrente.");
+      return;
+    }
+
     try {
       setLoading(true);
       toast.info("Criando reserva...");
@@ -140,7 +157,6 @@ export default function ReservationModal({
 
   return (
     <>
-      <ToastContainer />
       <div
         className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
         onClick={handleBackgroundClick}
@@ -201,6 +217,8 @@ export default function ReservationModal({
               <input
                 type="date"
                 value={date}
+                min={today}
+                max={!isAdmin ? lastDayOfMonth : undefined}
                 onChange={(e) => setDate(e.target.value)}
                 className="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
               />

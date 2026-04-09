@@ -5,8 +5,7 @@ import { LayoutGrid, GraduationCap, Laptop } from "lucide-react";
 import RoomCard from "./Cards/RoomCard";
 import ReservationModal from "./Modal/ReservationModal";
 import CreateRoomModal from "./Modal/CreateRoomModal";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type Room = {
   id: string;
@@ -171,7 +170,7 @@ export default function Rooms() {
 
   return (
     <>
-      {mounted && <ToastContainer />} {/* <-- Renderiza só no client */}
+
 
       <div className="w-full min-h-screen">
         <div className="relative w-full flex flex-col items-center justify-center overflow-visible px-4 md:px-16 pt-24 pb-10 md:pt-28 md:pb-12">

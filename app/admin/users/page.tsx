@@ -16,8 +16,7 @@ import {
   Trash2,
   Save
 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type UserType = "professor" | "admin_cpd";
 
@@ -167,7 +166,6 @@ export default function UserPanel() {
 
   return (
     <>
-      <ToastContainer />
       <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 py-10">
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">
