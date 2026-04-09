@@ -16,6 +16,12 @@ type AvailableEquipment = {
   descricao: string;
 };
 
+type EquipamentChange = {
+  type: 'add' | 'remove';
+  equipamentId: string;
+  quantity?: number;
+};
+
 export default function EditRoomPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -65,7 +71,7 @@ export default function EditRoomPage() {
     fetchEquipments();
   }, []);
 
-  const handleRemoveEquipment = async (equipmentId: string) => {
+/*   const handleRemoveEquipment = async (equipmentId: string) => {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}/equipamentos/${equipmentId}`,
@@ -101,7 +107,7 @@ export default function EditRoomPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ equipamento_id: selectedEquipmentId, quantidade:quantity }),
+          body: JSON.stringify({ equipamento_id: selectedEquipmentId, quantidade: quantity }),
         }
       );
 
@@ -109,7 +115,7 @@ export default function EditRoomPage() {
 
       setEquipamentos((prev) => [
         ...prev,
-        { id: added.id, nome: added.nome, quantidade:quantity },
+        { id: added.id, nome: added.nome, quantidade: quantity },
       ]);
 
       setSelectedEquipmentId("");
@@ -118,7 +124,7 @@ export default function EditRoomPage() {
       console.error(error);
       alert("Erro ao adicionar equipamento");
     }
-  };
+  }; */
 
   const handleUpdateRoom = async () => {
     try {
@@ -137,6 +143,37 @@ export default function EditRoomPage() {
 
       if (!res.ok) throw new Error("Erro ao atualizar sala");
 
+      for (const change of equipmentChangesQueue) {
+        try {
+          if (change.type === 'add') {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}/equipamentos`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ equipamento_id: change.equipamentId, quantidade: change.quantity }),
+              }
+            );
+            if (!res.ok) {
+              console.error('Erro ao adicionar equipamento: ', await res.text());
+              throw new Error("Erro ao adicionar equipamento");
+            };
+          } else if (change.type === 'remove') {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}/equipamentos/${change.equipamentId}`,
+              { method: "DELETE" }
+            );
+            if (!res.ok) {
+              console.error('Erro ao remover equipamento: ', await res.text());
+              throw new Error("Erro ao remover equipamento");
+            };
+          }
+        } catch (error) {
+          console.error('Erro ao atualizar a sala:' + error)
+          return;
+        }
+      }
+
       alert("Sala atualizada com sucesso!");
       router.push(`/rooms/${id}`);
       router.refresh();
@@ -145,6 +182,60 @@ export default function EditRoomPage() {
       alert("Erro ao atualizar sala");
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const [equipmentChangesQueue, setEquipmentChangesQueue] = useState<EquipamentChange[]>([]);
+
+  useEffect(() => {
+    console.log('Queue updated: ', equipmentChangesQueue)
+  }, [equipmentChangesQueue]);
+
+  const enququeRemoveEquipament = (equipmentId: string) => {
+    try {
+      setEquipmentChangesQueue(prev => [
+        ...prev,
+        { type: 'remove', equipamentId: equipmentId }
+      ]);
+
+      setEquipamentos((prev) => prev.filter((item) => item.id !== equipmentId));
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao remover equipamento");
+    }
+  };
+
+  const enququeAddEquipment = async () => {
+    if (!selectedEquipmentId || quantity < 1) {
+      alert("Selecione um equipamento e quantidade válida");
+      return;
+    }
+
+    if (equipamentos.find((eq) => eq.id === selectedEquipmentId)) {
+      alert("Equipamento já adicionado");
+      return;
+    }
+
+    const added = availableEquipments.find((eq) => eq.id === selectedEquipmentId);
+    if (!added) return;
+
+    try {
+      setEquipmentChangesQueue(prev => [
+        ...prev,
+        { type: 'add', equipamentId: selectedEquipmentId, quantity }
+      ]);
+
+      setEquipamentos((prev) => [
+        ...prev,
+        { id: added.id, nome: added.nome, quantidade: quantity },
+      ]);
+
+      setSelectedEquipmentId("");
+      setQuantity(1);
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao adicionar equipamento");
     }
   };
 
@@ -238,7 +329,8 @@ export default function EditRoomPage() {
                         Quantidade: <strong>{eq.quantidade}</strong>
                       </p>
                     </div>
-                    <button onClick={() => handleRemoveEquipment(eq.id)} className="text-red-500 hover:text-red-700 transition">
+                    {/* <button onClick={() => handleRemoveEquipment(eq.id)} className="text-red-500 hover:text-red-700 transition"> */}
+                    <button onClick={() => enququeRemoveEquipament(eq.id)} className="text-red-500 hover:text-red-700 transition">
                       <Trash2 size={20} />
                     </button>
                   </div>
@@ -273,8 +365,12 @@ export default function EditRoomPage() {
                   placeholder="Qtd"
                 />
 
-                <button
+                {/* <button
                   onClick={handleAddEquipment}
+                  className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl transition w-full md:w-1/6"
+                > */}
+                <button
+                  onClick={enququeAddEquipment}
                   className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-xl transition w-full md:w-1/6"
                 >
                   <Plus size={16} />

@@ -162,15 +162,6 @@ export default function RoomDetailsPage() {
               <p className="text-gray-500 mt-2">{room.bloco}</p>
             </div>
 
-            <div className="flex lg:justify-end">
-              <span
-                className={`inline-flex w-fit self-start px-4 py-2 rounded-full text-sm font-semibold ${
-                  room.ativo ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                }`}
-              >
-                {room.ativo ? "Ativa" : "Inativa"}
-              </span>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
             <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
