@@ -6,7 +6,6 @@ import {
   BookOpen,
   CalendarDays,
   Clock3,
-  FileText,
   Check,
   X,
   Edit,
@@ -38,13 +37,11 @@ type Reservation = {
   data: string;
   turno: string;
   aula_numero: number;
-  hora_inicio?: string;
-  hora_fim?: string;
-  status?: string;
-  motivo: string;
+  disciplina: string;
   nome_numero?: string;
   bloco?: string;
   usuario_nome?: string;
+  status?: string;
 };
 
 export default function AdminReservationPanel() {
@@ -59,7 +56,6 @@ export default function AdminReservationPanel() {
   const [date, setDate] = useState("");
   const [turno, setTurno] = useState("matutino");
   const [lessonNumber, setLessonNumber] = useState(1);
-  const [observation, setObservation] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -67,9 +63,9 @@ export default function AdminReservationPanel() {
     const fetchInitialData = async () => {
       try {
         const [roomsRes, usersRes, reservationsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`, { credentials: "include" }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`, { credentials: "include" }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`, { credentials: "include" }),
         ]);
 
         const [roomsData, usersData, reservationsData] = await Promise.all([
@@ -99,7 +95,6 @@ export default function AdminReservationPanel() {
     setDate("");
     setTurno("matutino");
     setLessonNumber(1);
-    setObservation("");
     setEditingId(null);
   };
 
@@ -126,19 +121,16 @@ export default function AdminReservationPanel() {
     }
 
     setLoading(true);
+    toast.info("Salvando reserva...", { autoClose: 1000 });
 
     try {
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("userId") || "admin";
-
       const payload = {
         sala_id: selectedRoomId,
         usuario_id: selectedUserId,
-        criado_por: adminId,
         data: date,
         turno,
         aula_numero: lessonNumber,
-        motivo: observation ? `${subject} - ${observation}` : subject,
+        disciplina: subject
       };
 
       const url = editingId
@@ -149,11 +141,9 @@ export default function AdminReservationPanel() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        credentials: "include", 
       });
 
       const result = await response.json();
@@ -182,10 +172,7 @@ export default function AdminReservationPanel() {
   };
 
   const handleEdit = (reservation: Reservation) => {
-    const [subjectName, ...obs] = reservation.motivo.split(" - ");
-
-    setSubject(subjectName);
-    setObservation(obs.join(" - "));
+    setSubject(reservation.disciplina);
     setSelectedRoomId(reservation.sala_id);
     setSelectedUserId(reservation.usuario_id);
     setDate(reservation.data.slice(0, 10));
@@ -197,53 +184,60 @@ export default function AdminReservationPanel() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleCancel = async (id: string) => {
-    if (!confirm("Deseja realmente cancelar esta reserva?")) return;
+  const confirmDelete = (reservation: Reservation) => {
+    if (reservation.status === "cancelada") return;
 
-    try {
-      const token = localStorage.getItem("token");
-      const adminId = localStorage.getItem("userId");
+    toast(
+      ({ closeToast }) => (
+        <div className="flex flex-col gap-2">
+          <p>Deseja realmente cancelar esta reserva?</p>
+          <div className="flex gap-2 justify-end">
+            <button
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+              onClick={() => closeToast()}
+            >
+              Não
+            </button>
+            <button
+              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+              onClick={async () => {
+                closeToast();
+                try {
+                  const response = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${reservation.id}/cancelar`,
+                    {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ cancelado_por: reservation.usuario_id }),
+                      credentials: "include", 
+                    }
+                  );
 
-      if (!token) {
-        toast.error("Token não encontrado. Faça login novamente.");
-        return;
+                  const result = await response.json();
+                  if (!response.ok) throw new Error(result?.message || "Erro ao cancelar");
+
+                  toast.success("Reserva cancelada!");
+                  setReservations((prev) =>
+                    prev.map((r) =>
+                      r.id === reservation.id ? { ...r, status: "cancelada" } : r
+                    )
+                  );
+                } catch (error: any) {
+                  toast.error(error.message || "Erro ao cancelar");
+                }
+              }}
+            >
+              Sim
+            </button>
+          </div>
+        </div>
+      ),
+      { 
+        autoClose: false,
+        position: "top-center",
+        
       }
-
-      if (!adminId) {
-        toast.error("Usuário não identificado.");
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${id}/cancelar`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            cancelado_por: adminId,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.message || "Erro ao cancelar reserva");
-      }
-
-      toast.success("Reserva cancelada!");
-
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.id === id ? { ...r, status: "cancelada" } : r
-        )
-      );
-    } catch (error: any) {
-      toast.error(error.message || "Erro ao cancelar");
-    }
+    );
   };
 
   const turnoColors = {
@@ -253,32 +247,27 @@ export default function AdminReservationPanel() {
   };
 
   return (
-    <>
-      <ToastContainer />
       <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 sm:px-6 py-8 sm:py-10">
         <div className="max-w-5xl mx-auto space-y-10">
           <div className="flex justify-center gap-4">
             <button
               onClick={() => setActiveTab("form")}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold transition ${activeTab === "form"
-                  ? "bg-blue-700 text-white"
-                  : "bg-white text-blue-700"
-                }`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold transition ${
+                activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+              }`}
             >
               <Plus size={16} /> Cadastro
             </button>
 
             <button
               onClick={() => setActiveTab("list")}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold transition ${activeTab === "list"
-                  ? "bg-blue-700 text-white"
-                  : "bg-white text-blue-700"
-                }`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold transition ${
+                activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+              }`}
             >
               <List size={16} /> Lista
             </button>
           </div>
-
           {activeTab === "form" && (
             <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-8">
               <div className="flex justify-center mb-5">
@@ -317,7 +306,6 @@ export default function AdminReservationPanel() {
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
                     <User size={18} />
@@ -335,10 +323,9 @@ export default function AdminReservationPanel() {
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
-                    <FileText size={18} />
+                    <BookOpen size={18} />
                     Disciplina
                   </label>
                   <input
@@ -348,7 +335,6 @@ export default function AdminReservationPanel() {
                     className="w-full border rounded-xl px-4 py-3"
                   />
                 </div>
-
                 <div>
                   <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
                     <CalendarDays size={18} />
@@ -361,7 +347,6 @@ export default function AdminReservationPanel() {
                     className="w-full border rounded-xl px-4 py-3"
                   />
                 </div>
-
                 <div>
                   <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
                     <Clock3 size={18} />
@@ -377,7 +362,6 @@ export default function AdminReservationPanel() {
                     <option value="noturno">Noturno</option>
                   </select>
                 </div>
-
                 <div>
                   <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
                     <Check size={18} />
@@ -389,19 +373,6 @@ export default function AdminReservationPanel() {
                     max={6}
                     value={lessonNumber}
                     onChange={(e) => setLessonNumber(Number(e.target.value))}
-                    className="w-full border rounded-xl px-4 py-3"
-                  />
-                </div>
-
-                <div>
-                  <label className="flex items-center gap-2 mb-2 font-medium text-gray-700">
-                    <FileText size={18} />
-                    Observação
-                  </label>
-                  <textarea
-                    value={observation}
-                    onChange={(e) => setObservation(e.target.value)}
-                    rows={3}
                     className="w-full border rounded-xl px-4 py-3"
                   />
                 </div>
@@ -421,7 +392,6 @@ export default function AdminReservationPanel() {
               </div>
             </div>
           )}
-
           {activeTab === "list" && (
             <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-6">
               <div className="mb-6">
@@ -451,27 +421,22 @@ export default function AdminReservationPanel() {
                               <h4 className="text-lg font-bold text-gray-800">
                                 {r.nome_numero}
                               </h4>
-                              <p className="text-sm text-gray-500">
-                                {r.bloco}
-                              </p>
+                              <p className="text-sm text-gray-500">{r.bloco}</p>
                             </div>
 
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold ${turnoColors[
-                                r.turno as keyof typeof turnoColors
-                                ] || "bg-gray-100 text-gray-700"
-                                }`}
+                              className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                turnoColors[r.turno as keyof typeof turnoColors] || "bg-gray-100 text-gray-700"
+                              }`}
                             >
                               {r.turno}
                             </span>
                           </div>
 
                           <div className="mb-4">
-                            <p className="text-sm text-gray-500">
-                              Disciplina
-                            </p>
+                            <p className="text-sm text-gray-500">Disciplina</p>
                             <p className="font-semibold text-blue-800 text-lg">
-                              {r.motivo}
+                              {r.disciplina}
                             </p>
                           </div>
 
@@ -492,29 +457,19 @@ export default function AdminReservationPanel() {
 
                             <p className="text-gray-600">
                               <span className="font-medium text-gray-800">
-                                Horário:
-                              </span>{" "}
-                              <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-lg text-xs font-semibold">
-                                {r.hora_inicio} às {r.hora_fim}
-                              </span>
-                            </p>
-
-                            <p className="text-gray-600">
-                              <span className="font-medium text-gray-800">
                                 Aula:
                               </span>{" "}
                               {r.aula_numero}
                             </p>
 
-                            {creator &&
-                              creator.nome !== r.usuario_nome && (
-                                <p className="text-gray-600">
-                                  <span className="font-medium text-gray-800">
-                                    Criado por:
-                                  </span>{" "}
-                                  {creator.nome}
-                                </p>
-                              )}
+                            {creator && creator.nome !== r.usuario_nome && (
+                              <p className="text-gray-600">
+                                <span className="font-medium text-gray-800">
+                                  Criado por:
+                                </span>{" "}
+                                {creator.nome}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -529,16 +484,15 @@ export default function AdminReservationPanel() {
 
                           <button
                             disabled={r.status === "cancelada"}
-                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-semibold transition ${r.status === "cancelada"
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-semibold transition ${
+                              r.status === "cancelada"
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                 : "bg-red-50 text-red-700 hover:bg-red-100"
-                              }`}
-                            onClick={() => handleCancel(r.id)}
+                            }`}
+                            onClick={() => confirmDelete(r)}
                           >
                             <X size={16} />
-                            {r.status === "cancelada"
-                              ? "Cancelada"
-                              : "Cancelar"}
+                            {r.status === "cancelada" ? "Cancelada" : "Cancelar"}
                           </button>
                         </div>
                       </li>
@@ -550,6 +504,5 @@ export default function AdminReservationPanel() {
           )}
         </div>
       </div>
-    </>
   );
 }

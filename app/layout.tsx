@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import ResponsiveNav from "./components/Navbar/ResponsiveNav";
 import { AuthProvider } from "@/contexts/AuthContext";
-import ToastProvider from "./components/ToastProvider";
+import ToastProvider from "./components/Providers/ToastProvider";
 
 const font = Inter({
   weight: ["100","200","300","400","500","600","700","800","900"],
@@ -23,8 +23,9 @@ export default function RootLayout({
       <body className={`${font.className} antialiased bg-white h-full`}>
         <AuthProvider>
           <ResponsiveNav />
-          {children}
-          <ToastProvider /> 
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
