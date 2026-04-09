@@ -37,25 +37,22 @@ const isActive = (status: string) => status === "ativa" || status === "aberta";
 const isCancelled = (status: string) =>
   status === "cancelada" || status === "cancelado";
 
+const statusPriority = (status: string): number => {
+  if (isActive(status)) return 0;
+  if (isCancelled(status)) return 2;
+  return 1; // concluida or any other status
+};
+
 const sortReservations = (list: Reservation[]): Reservation[] =>
   [...list].sort((a, b) => {
-    const aActive = isActive(a.status);
-    const bActive = isActive(b.status);
-    const aCancelled = isCancelled(a.status);
-    const bCancelled = isCancelled(b.status);
+    const pa = statusPriority(a.status);
+    const pb = statusPriority(b.status);
 
-    // Cancelled always last
-    if (aCancelled !== bCancelled) return aCancelled ? 1 : -1;
+    if (pa !== pb) return pa - pb;
 
-    // Among active: closest date first
-    if (aActive && bActive)
-      return new Date(a.data).getTime() - new Date(b.data).getTime();
-
-    // Among cancelled: most recent first
-    if (aCancelled && bCancelled)
-      return new Date(b.data).getTime() - new Date(a.data).getTime();
-
-    return 0;
+    // Same group: sort by date — cancelled recent-first, rest closest-first
+    if (isCancelled(a.status)) return b.data.localeCompare(a.data);
+    return a.data.localeCompare(b.data);
   });
 
 export default function ReservationsPage() {
