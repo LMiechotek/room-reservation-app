@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import ReservationCard from "./Cards/ReservationCard";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type Reservation = {
   id: string;
@@ -95,7 +94,6 @@ export default function ReservationsPage() {
 
   return (
     <>
-      <ToastContainer />
       <div className="w-full min-h-screen">
         <div className="relative w-full flex flex-col items-center justify-center px-4 md:px-16 pt-24 pb-10">
           <div className="absolute inset-0 bg-linear-to-r from-blue-800 via-teal-400 to-teal-500"></div>

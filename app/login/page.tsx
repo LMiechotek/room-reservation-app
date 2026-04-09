@@ -3,8 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -67,7 +66,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <ToastContainer />
       <div className="min-h-screen bg-linear-to-r from-blue-800 via-teal-400 to-teal-500 pt-28">
         <main className="min-h-[calc(100vh-112px)] flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">

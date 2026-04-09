@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { User, BookOpen, CalendarDays, Clock3 } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import Image from "next/image";
-import "react-toastify/dist/ReactToastify.css";
 import { useAuth } from "@/contexts/AuthContext";
 
 type Props = {
@@ -140,7 +139,6 @@ export default function ReservationModal({
 
   return (
     <>
-      <ToastContainer />
       <div
         className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
         onClick={handleBackgroundClick}

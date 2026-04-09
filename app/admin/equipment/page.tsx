@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Laptop, FileText, Save, Edit, Trash2, List, Plus } from "lucide-react";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 
 type FormErrors = { nome?: string; descricao?: string };
 
@@ -98,6 +97,7 @@ export default function EquipmentPanel() {
     setActiveTab("form");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
   const confirmDelete = (onConfirm: () => void) => {
     toast(
       ({ closeToast }) => (
@@ -156,7 +156,6 @@ export default function EquipmentPanel() {
 
   return (
     <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 sm:px-6 py-8 sm:py-10">
-      <ToastContainer />
       <div className="max-w-4xl mx-auto space-y-10">
         <div className="flex justify-center gap-4 mb-6">
           <button
@@ -176,6 +175,7 @@ export default function EquipmentPanel() {
             <List size={16} /> Lista
           </button>
         </div>
+
         {activeTab === "form" && (
           <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-8">
             <div className="flex justify-center mb-5">
@@ -254,7 +254,6 @@ export default function EquipmentPanel() {
           </div>
         )}
 
-        {/* Lista */}
         {activeTab === "list" && (
           <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl border border-white/30 p-6">
             <h2 className="text-xl font-bold mb-4 text-gray-700">Equipamentos cadastrados</h2>
