@@ -271,6 +271,7 @@ export default function Rooms() {
                 id={room.id}
                 name={room.name}
                 capacity={room.capacity}
+                roomType={room.roomType}
                 status={room.status}
                 onReserve={handleReserve}
                 isLoggedIn={isLoggedIn} 

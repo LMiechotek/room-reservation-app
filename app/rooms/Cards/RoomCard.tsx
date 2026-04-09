@@ -8,6 +8,7 @@ type RoomProps = {
   id: string;
   name: string;
   capacity: number;
+  roomType: "sala_aula" | "laboratorio";
   status: "disponivel" | "ocupada" | "reservada";
   onReserve: (roomId: string) => void;
   isLoggedIn: boolean;
@@ -17,6 +18,7 @@ export default function RoomCard({
   id,
   name,
   capacity,
+  roomType,
   status,
   onReserve,
   isLoggedIn,
@@ -55,7 +57,7 @@ export default function RoomCard({
         </p>
         <p className="flex items-center gap-2">
           <Building2 size={18} className="text-blue-600" />
-          <strong>Tipo de sala:</strong> {status === "disponivel" ? "Aula" : statusLabel[status]}
+          <strong>Tipo de sala:</strong> {roomType === "laboratorio" ? "Laboratório" : "Sala de Aula"}
         </p>
       </div>
       <div
