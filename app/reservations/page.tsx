@@ -27,6 +27,7 @@ export default function ReservationsPage() {
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [search, setSearch] = useState("");
   const [date, setDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "ativa" | "cancelada">("todas");
 
   useEffect(() => {
     if (user) fetchReservations();
@@ -88,6 +89,23 @@ export default function ReservationsPage() {
     setFilteredReservations(filtered);
   };
 
+  const displayedReservations = filteredReservations.filter((r) => {
+    if (statusFilter === "todas") return true;
+    if (statusFilter === "cancelada")
+      return r.status === "cancelada" || r.status === "cancelado";
+    return r.status === "ativa" || r.status === "aberta";
+  });
+
+  const statusCounts = {
+    todas: filteredReservations.length,
+    ativa: filteredReservations.filter(
+      (r) => r.status === "ativa" || r.status === "aberta"
+    ).length,
+    cancelada: filteredReservations.filter(
+      (r) => r.status === "cancelada" || r.status === "cancelado"
+    ).length,
+  };
+
   const placeholder =
     user?.tipo === "admin_cpd"
       ? "Buscar sala ou professor..."
@@ -104,42 +122,83 @@ export default function ReservationsPage() {
               Reservas
             </h1>
 
-            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex flex-col md:flex-row gap-4">
-              <input
-                type="text"
-                placeholder={placeholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 px-4 py-2 rounded-lg outline-none bg-white"
-              />
+            <div className="bg-white/10 backdrop-blur-md p-4 rounded-xl flex flex-col gap-3">
+              <div className="flex flex-col md:flex-row gap-3">
+                <input
+                  type="text"
+                  placeholder={placeholder}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 px-4 py-2 rounded-lg outline-none bg-white"
+                />
 
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="px-4 py-2 rounded-lg outline-none bg-white"
-              />
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="px-4 py-2 rounded-lg outline-none bg-white"
+                />
 
-              <button
-                onClick={handleSearch}
-                className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-xl transition"
-              >
-                Buscar
-              </button>
+                <button
+                  onClick={handleSearch}
+                  className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded-xl transition"
+                >
+                  Buscar
+                </button>
 
-              <Link
-                href="/admin/reservation"
-                className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition text-center"
-              >
-                Nova reserva
-              </Link>
+                <Link
+                  href="/admin/reservation"
+                  className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-xl transition text-center"
+                >
+                  Nova reserva
+                </Link>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {(
+                  [
+                    { key: "todas", label: "Todas", count: statusCounts.todas },
+                    { key: "ativa", label: "Ativas", count: statusCounts.ativa },
+                    { key: "cancelada", label: "Canceladas", count: statusCounts.cancelada },
+                  ] as const
+                ).map(({ key, label, count }) => {
+                  const isActive = statusFilter === key;
+                  const colorMap = {
+                    todas: isActive
+                      ? "bg-white text-blue-800 shadow-md"
+                      : "text-white hover:bg-white/20",
+                    ativa: isActive
+                      ? "bg-green-500 text-white shadow-md"
+                      : "text-white hover:bg-green-500/30",
+                    cancelada: isActive
+                      ? "bg-red-500 text-white shadow-md"
+                      : "text-white hover:bg-red-500/30",
+                  };
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setStatusFilter(key)}
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${colorMap[key]}`}
+                    >
+                      {label}
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
+                          isActive ? "bg-white/25" : "bg-white/15"
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto mt-10 px-4 md:px-0">
-          {filteredReservations.length > 0 ? (
-            filteredReservations.map((reservation) => (
+          {displayedReservations.length > 0 ? (
+            displayedReservations.map((reservation) => (
               <ReservationCard
                 key={reservation.id}
                 reservation={reservation}
