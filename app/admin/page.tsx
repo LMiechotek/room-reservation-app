@@ -30,7 +30,7 @@ const adminFeatures = [
     title: "Reservas",
     description: "Gerencie reservas de salas e organize a agenda.",
     icon: BookOpen,
-    url: "/admin/reservations",
+    url: "/admin/reservation",
   },
 ];
 
