@@ -21,6 +21,29 @@ type Reservation = {
   status: string;
 };
 
+
+const isActive = (status: string) => status === "ativa" || status === "aberta";
+const isCancelled = (status: string) =>
+  status === "cancelada" || status === "cancelado";
+
+const statusPriority = (status: string): number => {
+  if (isActive(status)) return 0;
+  if (isCancelled(status)) return 2;
+  return 1; // concluida or any other status
+};
+
+const sortReservations = (list: Reservation[]): Reservation[] =>
+  [...list].sort((a, b) => {
+    const pa = statusPriority(a.status);
+    const pb = statusPriority(b.status);
+
+    if (pa !== pb) return pa - pb;
+
+    // Same group: sort by date — cancelled recent-first, rest closest-first
+    if (isCancelled(a.status)) return b.data.localeCompare(a.data);
+    return a.data.localeCompare(b.data);
+  });
+
 export default function ReservationsPage() {
   const { user } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -89,21 +112,19 @@ export default function ReservationsPage() {
     setFilteredReservations(filtered);
   };
 
-  const displayedReservations = filteredReservations.filter((r) => {
-    if (statusFilter === "todas") return true;
-    if (statusFilter === "cancelada")
-      return r.status === "cancelada" || r.status === "cancelado";
-    return r.status === "ativa" || r.status === "aberta";
-  });
+  const displayedReservations = (() => {
+    const filtered = filteredReservations.filter((r) => {
+      if (statusFilter === "todas") return true;
+      if (statusFilter === "cancelada") return isCancelled(r.status);
+      return isActive(r.status);
+    });
+    return statusFilter === "todas" ? sortReservations(filtered) : filtered;
+  })();
 
   const statusCounts = {
     todas: filteredReservations.length,
-    ativa: filteredReservations.filter(
-      (r) => r.status === "ativa" || r.status === "aberta"
-    ).length,
-    cancelada: filteredReservations.filter(
-      (r) => r.status === "cancelada" || r.status === "cancelado"
-    ).length,
+    ativa: filteredReservations.filter((r) => isActive(r.status)).length,
+    cancelada: filteredReservations.filter((r) => isCancelled(r.status)).length,
   };
 
   const placeholder =
