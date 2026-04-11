@@ -118,7 +118,7 @@ export default function ReservationsPage() {
       if (statusFilter === "cancelada") return isCancelled(r.status);
       return isActive(r.status);
     });
-    return sortReservations(filtered);
+    return statusFilter === "todas" ? sortReservations(filtered) : filtered;
   })();
 
   const statusCounts = {
