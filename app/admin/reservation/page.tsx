@@ -49,7 +49,7 @@ type SlotInfo = {
   hora_fim: string;
 };
 
-type HorariosResponse = Record<string, Record<string, SlotInfo>>;
+type TimeSlotsResponse = Record<string, Record<string, SlotInfo>>;
 
 export default function AdminReservationPanel() {
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -61,10 +61,10 @@ export default function AdminReservationPanel() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [subject, setSubject] = useState("");
   const [date, setDate] = useState("");
-  const [turno, setTurno] = useState("matutino");
+  const [selectedShift, setSelectedShift] = useState("matutino");
   const [selectedLessons, setSelectedLessons] = useState<number[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [horarios, setHorarios] = useState<HorariosResponse>({});
+  const [timeSlots, setTimeSlots] = useState<TimeSlotsResponse>({});
   const [takenSlots, setTakenSlots] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -103,18 +103,18 @@ export default function AdminReservationPanel() {
   }, []);
 
   useEffect(() => {
-    const fetchHorarios = async () => {
+    const fetchTimeSlots = async () => {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/horarios`,
           { credentials: "include" }
         );
-        if (res.ok) setHorarios(await res.json());
+        if (res.ok) setTimeSlots(await res.json());
       } catch (error) {
         console.error("Erro ao buscar horários:", error);
       }
     };
-    fetchHorarios();
+    fetchTimeSlots();
   }, []);
 
   useEffect(() => {
@@ -127,14 +127,14 @@ export default function AdminReservationPanel() {
         (r) =>
           r.sala_id === selectedRoomId &&
           r.data.slice(0, 10) === date &&
-          r.turno === turno &&
+          r.turno === selectedShift &&
           (r.status === "ativa" || r.status === "aberta") &&
           r.id !== editingId
       )
       .map((r) => r.aula_numero);
 
     setTakenSlots(taken);
-  }, [date, turno, selectedRoomId, reservations, editingId]);
+  }, [date, selectedShift, selectedRoomId, reservations, editingId]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -151,7 +151,7 @@ export default function AdminReservationPanel() {
     setSelectedUserId(users[0]?.id || "");
     setSubject("");
     setDate("");
-    setTurno("matutino");
+    setSelectedShift("matutino");
     setSelectedLessons([]);
     setEditingId(null);
   };
@@ -183,7 +183,7 @@ export default function AdminReservationPanel() {
           sala_id: selectedRoomId,
           usuario_id: selectedUserId,
           data: date,
-          turno,
+          turno:selectedShift,
           aula_numero: sorted[0],
           disciplina: subject,
         };
@@ -211,7 +211,7 @@ export default function AdminReservationPanel() {
             sala_id: selectedRoomId,
             usuario_id: selectedUserId,
             data: date,
-            turno,
+            turno: selectedShift,
             aula_numero: aulaNumero,
             disciplina: subject,
           };
@@ -250,7 +250,7 @@ export default function AdminReservationPanel() {
     setSelectedRoomId(reservation.sala_id);
     setSelectedUserId(reservation.usuario_id);
     setDate(reservation.data.slice(0, 10));
-    setTurno(reservation.turno);
+    setSelectedShift(reservation.turno);
     setSelectedLessons([reservation.aula_numero]);
     setEditingId(reservation.id);
     setActiveTab("form");
@@ -435,8 +435,8 @@ export default function AdminReservationPanel() {
                     Turno
                   </label>
                   <select
-                    value={turno}
-                    onChange={(e) => setTurno(e.target.value)}
+                    value={selectedShift}
+                    onChange={(e) => setSelectedShift(e.target.value)}
                     className="w-full border rounded-xl px-4 py-3 flex-1"
                   >
                     <option value="matutino">Matutino</option>
@@ -452,7 +452,7 @@ export default function AdminReservationPanel() {
                   Horários
                 </label>
                 <div
-                  className="w-full border rounded-xl px-3 py-2 min-h-[48px] flex flex-wrap gap-1 items-center cursor-pointer focus-within:ring-2 focus-within:ring-blue-500"
+                  className="w-full border rounded-xl px-3 py-2 min-h-12 flex flex-wrap gap-1 items-center cursor-pointer focus-within:ring-2 focus-within:ring-blue-500"
                   onClick={() => setDropdownOpen((prev) => !prev)}
                 >
                   {selectedLessons.length === 0 && (
@@ -464,7 +464,7 @@ export default function AdminReservationPanel() {
                     .slice()
                     .sort((a, b) => a - b)
                     .map((num) => {
-                      const slotInfo = horarios[turno]?.[String(num)];
+                      const slotInfo = timeSlots[selectedShift]?.[String(num)];
                       if (!slotInfo) return null;
                       const label = `${slotInfo.hora_inicio}-${slotInfo.hora_fim}`;
                       return (
@@ -492,9 +492,9 @@ export default function AdminReservationPanel() {
                   />
                 </div>
 
-                {dropdownOpen && horarios[turno] && (
+                {dropdownOpen && timeSlots[selectedShift] && (
                   <div className="border border-gray-200 rounded-xl mt-1 shadow-lg bg-white overflow-hidden relative z-10">
-                    {Object.entries(horarios[turno]).map(([num, info]) => {
+                    {Object.entries(timeSlots[selectedShift]).map(([num, info]) => {
                       const numero = Number(num);
                       const isSelected = selectedLessons.includes(numero);
                       const isTaken = takenSlots.includes(numero);
