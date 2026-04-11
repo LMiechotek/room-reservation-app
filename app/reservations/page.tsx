@@ -21,43 +21,6 @@ type Reservation = {
   status: string;
 };
 
-<<<<<<< HEAD
-=======
-// Converts any date string from the API to a local YYYY-MM-DD string,
-// avoiding UTC-vs-local offset issues when slicing raw timestamps.
-const toLocalDateStr = (dateStr: string): string => {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
-  const d = new Date(dateStr);
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, "0"),
-    String(d.getDate()).padStart(2, "0"),
-  ].join("-");
-};
-
-const isActive = (status: string) => status === "ativa" || status === "aberta";
-const isCancelled = (status: string) =>
-  status === "cancelada" || status === "cancelado";
-
-const statusPriority = (status: string): number => {
-  if (isActive(status)) return 0;
-  if (isCancelled(status)) return 2;
-  return 1; // concluida or any other status
-};
-
-const sortReservations = (list: Reservation[]): Reservation[] =>
-  [...list].sort((a, b) => {
-    const pa = statusPriority(a.status);
-    const pb = statusPriority(b.status);
-
-    if (pa !== pb) return pa - pb;
-
-    // Same group: sort by date — cancelled recent-first, rest closest-first
-    if (isCancelled(a.status)) return b.data.localeCompare(a.data);
-    return a.data.localeCompare(b.data);
-  });
-
->>>>>>> parent of 7b679c5 (fix: revert toLocalDateStr — use slice(0,10) for timezone-safe date filter)
 export default function ReservationsPage() {
   const { user } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -93,7 +56,7 @@ export default function ReservationsPage() {
         nome_numero: reservation.nome_numero,
         usuario_nome: reservation.usuario_nome,
         usuario_id: reservation.usuario_id,
-        data: toLocalDateStr(reservation.data),
+        data: reservation.data.slice(0, 10),
         hora_inicio: reservation.hora_inicio,
         hora_fim: reservation.hora_fim,
         turno: reservation.turno,
