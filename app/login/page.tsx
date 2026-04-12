@@ -35,21 +35,22 @@ export default function LoginPage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, senha: password }),
+          body: JSON.stringify({ email: email, senha: password }),
           credentials: "include", 
         }
       );
 
       if (!response.ok) {
         toast.error("Email ou senha inválidos");
-        return;
       }
 
       const data = await response.json();
 
       authLogin({ id: data.usuario.id, tipo: data.usuario.tipo });
 
-      if (rememberMe) localStorage.setItem("rememberEmail", email);
+      if (rememberMe) {
+        localStorage.setItem("rememberEmail", email);
+      }
 
       const redirectPath =
         data.usuario.tipo === "admin_cpd" ? "/admin" : "/rooms";
