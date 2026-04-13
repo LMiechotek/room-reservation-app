@@ -66,10 +66,7 @@ export default function ReservationModal({
   useEffect(() => {
     const fetchHorarios = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/horarios`,
-          { credentials: "include" }
-        );
+        const response = await fetch("/api/reservations/schedules");
         if (response.ok) {
           const data: HorariosResponse = await response.json();
           setHorarios(data);
@@ -90,10 +87,7 @@ export default function ReservationModal({
 
     const fetchTakenSlots = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/reservas`,
-          { credentials: "include" }
-        );
+        const response = await fetch("/api/reservations");
         if (!response.ok) return;
 
         const data: ExistingReservation[] = await response.json();
@@ -136,10 +130,7 @@ export default function ReservationModal({
       if (!isAdmin) return;
 
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`,
-          { credentials: "include" }
-        );
+        const response = await fetch("/api/users");
 
         const data = await response.json();
 
@@ -231,7 +222,7 @@ export default function ReservationModal({
         };
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/reservas`,
+          "/api/reservations",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -352,7 +343,7 @@ export default function ReservationModal({
               Horários
             </label>
             <div
-              className="w-full border rounded-lg px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer min-h-[42px] flex flex-wrap gap-1 items-center"
+              className="w-full border rounded-lg px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer min-h-10.5 flex flex-wrap gap-1 items-center"
               onClick={() => setDropdownOpen((prev) => !prev)}
             >
               {selectedLessons.length === 0 && (
