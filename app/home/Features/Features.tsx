@@ -13,7 +13,7 @@ export default function FeaturesSection() {
     const fetchUser = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
+          `/api/auth/user`,
           {
             credentials: "include", 
           }

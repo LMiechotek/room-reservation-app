@@ -10,6 +10,7 @@ import {
   Trash2,
   ArrowLeft,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 type Equipment = {
   id: string;
@@ -36,14 +37,15 @@ export default function RoomDetailsPage() {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`,
-          { credentials: "include" }
-        );
+        const res = await fetch("/api/auth/user", {
+          credentials: "include",
+        });
+
         if (res.ok) {
           const data = await res.json();
           setIsAdmin(data.tipo === "admin_cpd");
@@ -52,9 +54,11 @@ export default function RoomDetailsPage() {
         }
       } catch (error) {
         console.error("Erro ao buscar usuário:", error);
+        toast.error("Erro ao verificar usuário");
         setIsAdmin(false);
       }
     };
+
     fetchUser();
   }, []);
 
@@ -63,9 +67,7 @@ export default function RoomDetailsPage() {
 
     const fetchRoom = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}`
-        );
+        const res = await fetch(`/api/rooms/${id}`);
 
         if (!res.ok) {
           throw new Error("Erro ao buscar sala");
@@ -75,6 +77,7 @@ export default function RoomDetailsPage() {
         setRoom(data);
       } catch (error) {
         console.error(error);
+        toast.error("Erro ao carregar sala");
         setRoom(null);
       } finally {
         setLoading(false);
@@ -85,23 +88,35 @@ export default function RoomDetailsPage() {
   }, [id]);
 
   const handleDelete = async () => {
-    const confirmDelete = confirm("Deseja realmente excluir esta sala?");
-    if (!confirmDelete) return;
+    const toastId = toast.loading("Excluindo sala...");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}`,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`/api/rooms/${id}`, {
+        method: "DELETE",
+      });
 
       if (!res.ok) {
-        throw new Error("Erro ao excluir sala");
+        const errorText = await res.text();
+        throw new Error(errorText || "Erro ao excluir sala");
       }
 
+      toast.update(toastId, {
+        render: "Sala excluída com sucesso!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000,
+      });
+
       router.push("/rooms");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Erro ao excluir sala");
+
+      toast.update(toastId, {
+        render: error.message || "Erro ao excluir sala",
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
+      });
     }
   };
 
@@ -135,6 +150,7 @@ export default function RoomDetailsPage() {
 
           {isAdmin && (
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+
               <button
                 onClick={() => router.push(`/rooms/${id}/edit`)}
                 className="flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl transition w-full sm:w-auto"
@@ -144,26 +160,24 @@ export default function RoomDetailsPage() {
               </button>
 
               <button
-                onClick={handleDelete}
+                onClick={() => setShowDeleteModal(true)}
                 className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition w-full sm:w-auto"
               >
                 <Trash2 size={18} />
                 Excluir
               </button>
+
             </div>
           )}
         </div>
         <div className="bg-white rounded-3xl shadow-lg p-6 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 wrap-break-word">
-                {room.nome_numero}
-              </h1>
-              <p className="text-gray-500 mt-2">{room.bloco}</p>
-            </div>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 wrap-break-word">
+            {room.nome_numero}
+          </h1>
 
-          </div>
+          <p className="text-gray-500 mt-2">{room.bloco}</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+
             <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100">
               <div className="flex items-center gap-3 text-blue-600">
                 <Users />
@@ -177,7 +191,7 @@ export default function RoomDetailsPage() {
                 <Building2 />
                 <span className="font-semibold">Tipo</span>
               </div>
-              <p className="text-xl sm:text-2xl font-bold mt-3">
+              <p className="text-2xl font-bold mt-3">
                 {room.tipo_sala === "sala_aula" ? "Sala de Aula" : "Laboratório"}
               </p>
             </div>
@@ -187,23 +201,32 @@ export default function RoomDetailsPage() {
                 <Monitor />
                 <span className="font-semibold">Equipamentos</span>
               </div>
-              <p className="text-2xl font-bold mt-3">{room.equipamentos.length}</p>
+              <p className="text-2xl font-bold mt-3">
+                {room.equipamentos.length}
+              </p>
             </div>
+
           </div>
           <div className="mt-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-5">Equipamentos da Sala</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-5">
+              Equipamentos da Sala
+            </h2>
 
             {room.equipamentos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {room.equipamentos.map((eq) => (
                   <div
                     key={eq.id}
-                    className="bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-sm"
+                    className="bg-gray-50 border border-gray-200 rounded-2xl p-5"
                   >
-                    <h3 className="font-bold text-lg text-gray-800 wrap-break-word">{eq.nome}</h3>
+                    <h3 className="font-bold text-lg text-gray-800 wrap-break-word">
+                      {eq.nome}
+                    </h3>
 
                     {eq.descricao && (
-                      <p className="text-gray-500 mt-2 wrap-break-word">{eq.descricao}</p>
+                      <p className="text-gray-500 mt-2 wrap-break-word">
+                        {eq.descricao}
+                      </p>
                     )}
 
                     <p className="mt-3 text-sm text-gray-700">
@@ -213,11 +236,55 @@ export default function RoomDetailsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-500">Nenhum equipamento cadastrado.</p>
+              <p className="text-gray-500">
+                Nenhum equipamento cadastrado.
+              </p>
             )}
           </div>
         </div>
       </div>
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+
+            <h2 className="text-xl font-bold text-gray-800">
+              Confirmar exclusão
+            </h2>
+
+            <p className="text-gray-600 mt-3 leading-relaxed">
+              Você está prestes a excluir a sala:
+              <br />
+              <span className="font-semibold text-gray-900">
+                {room.nome_numero}
+              </span>
+              <br /><br />
+              Essa ação não pode ser desfeita.
+            </p>
+
+            <div className="flex justify-end gap-3 mt-6">
+
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 rounded-xl bg-gray-200 hover:bg-gray-300"
+              >
+                Cancelar
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  handleDelete();
+                }}
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white"
+              >
+                Excluir
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
