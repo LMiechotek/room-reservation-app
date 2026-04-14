@@ -53,12 +53,14 @@ export default function UserPanel() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`);
+        const res = await fetch("/api/users", {
+          credentials: "include",
+        });
         const data = await res.json();
 
         const activeUsers = data.filter((u: UserData) => u.ativo !== false);
         setUsers(activeUsers);
-        
+
       } catch (error) {
         console.error(error);
         toast.error("Não foi possível carregar os usuários");
@@ -91,12 +93,17 @@ export default function UserPanel() {
     setLoading(true);
 
     try {
-      const payload: any = { nome: name, email, tipo: userType };
+      const payload: any = {
+        nome: name,
+        email,
+        tipo: userType,
+        ativo: true,
+      };
       if (!editingId) payload.senha = password;
 
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`;
+        ? `/api/users/${editingId}`
+        : `/api/users`;
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -108,13 +115,13 @@ export default function UserPanel() {
       if (!response.ok) {
         if (response.status === 400) {
           const json = await response.json();
-          if (json.error === "E-mail deve ser institucional (@uniuv.edu.br ou @unespar.edu.br)"){
+          if (json.error === "E-mail deve ser institucional (@uniuv.edu.br ou @unespar.edu.br)") {
             toast.error("O email deve terminar em uniuv.edu.br ou unespar.edu.br");
             return;
           }
         } else if (response.status === 500) {
           const json = await response.json();
-          if (json.error === "Unable to validate email address: invalid format"){
+          if (json.error === "Unable to validate email address: invalid format") {
             toast.error("formato de endereço de email inválido");
             return;
           }
@@ -161,7 +168,7 @@ export default function UserPanel() {
     if (!confirm("Deseja realmente excluir este usuário?")) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${id}`, {
+      const res = await fetch(`/api/users/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) {
@@ -183,17 +190,15 @@ export default function UserPanel() {
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("form")}
             >
               <Plus size={16} /> Cadastro
             </button>
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("list")}
             >
               <List size={16} /> Lista
