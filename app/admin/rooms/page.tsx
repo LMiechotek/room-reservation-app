@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Home, Users, Monitor, Cpu, Building2, Edit, X, List, Plus, Save } from "lucide-react";
 import { toast } from "react-toastify";
+import ConfirmModal from "@/app/components/ui/ConfirmModal";
 
 type RoomType = "sala_aula" | "laboratorio";
 
@@ -35,6 +36,9 @@ export default function RoomsPanel() {
   const [type, setType] = useState<RoomType>("sala_aula");
   const [machines, setMachines] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEquipments = async () => {
@@ -187,23 +191,47 @@ export default function RoomsPanel() {
       toast.error("Erro ao carregar dados da sala");
     }
   };
+  const openDeleteModal = (id: string) => {
+    setSelectedRoomId(id);
+    setShowConfirmModal(true);
+  };
+  const confirmDelete = async () => {
+    if (!selectedRoomId) return;
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir esta sala?")) return;
     try {
-      const res = await fetch(`/api/rooms/${id}`, {
+      const res = await fetch(`/api/rooms/${selectedRoomId}`, {
         method: "DELETE",
       });
+
       if (!res.ok) throw new Error("Erro ao excluir sala");
-      setRooms(rooms.filter((r) => r.id !== id));
+
+      setRooms((prev) =>
+        prev.filter((r) => r.id !== selectedRoomId)
+      );
+
       toast.success("Sala excluída com sucesso!");
     } catch (error: any) {
       toast.error(error.message || "Erro ao excluir sala");
+    } finally {
+      setShowConfirmModal(false);
+      setSelectedRoomId(null);
     }
   };
 
   return (
     <>
+      <ConfirmModal
+        open={showConfirmModal}
+        title="Excluir sala"
+        description="Tem certeza que deseja excluir esta sala? Essa ação não pode ser desfeita."
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+        onCancel={() => {
+          setShowConfirmModal(false);
+          setSelectedRoomId(null);
+        }}
+        onConfirm={confirmDelete}
+      />
       <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 py-10">
         <div className="max-w-5xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">
@@ -309,8 +337,8 @@ export default function RoomsPanel() {
                           <label
                             key={item.id}
                             className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${equipmentsSelected[item.id]
-                                ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 hover:bg-gray-50"
+                              ? "border-blue-500 bg-blue-50"
+                              : "border-gray-200 hover:bg-gray-50"
                               }`}
                           >
                             <input
@@ -391,7 +419,7 @@ export default function RoomsPanel() {
                         </button>
                         <button
                           className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
-                          onClick={() => handleDelete(room.id)}
+                          onClick={() => openDeleteModal(room.id)}
                         >
                           <X size={16} /> Excluir
                         </button>
