@@ -19,7 +19,7 @@ export default function EquipmentPanel() {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`);
+        const res = await fetch(`/api/equipments`);
         if (!res.ok) throw new Error("Erro ao buscar equipamentos");
         const data = await res.json();
         setEquipments(data);
@@ -48,8 +48,8 @@ export default function EquipmentPanel() {
     try {
       const payload = { nome, descricao };
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`;
+        ? `/api/equipments/${editingId}`
+        : "/api/equipments";
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -134,14 +134,13 @@ export default function EquipmentPanel() {
   const handleDelete = (id: string) => {
     confirmDelete(async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos/${id}`, {
+        const response = await fetch(`/api/equipments/${id}`, {
           method: "DELETE",
         });
 
         if (!response.ok) {
           const data = await response.json().catch(() => null);
-          if (data?.message) toast.error(data.message);
-          else toast.error("Erro ao excluir equipamento");
+          toast.error(data?.error || "Erro ao excluir equipamento");
           return;
         }
 
@@ -159,17 +158,15 @@ export default function EquipmentPanel() {
       <div className="max-w-4xl mx-auto space-y-10">
         <div className="flex justify-center gap-4 mb-6">
           <button
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-              activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+              }`}
             onClick={() => setActiveTab("form")}
           >
             <Plus size={16} /> Cadastro
           </button>
           <button
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-              activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+              }`}
             onClick={() => setActiveTab("list")}
           >
             <List size={16} /> Lista
@@ -247,8 +244,8 @@ export default function EquipmentPanel() {
                 {loading
                   ? "Salvando..."
                   : editingId
-                  ? "Salvar Alterações"
-                  : "Cadastrar Equipamento"}
+                    ? "Salvar Alterações"
+                    : "Cadastrar Equipamento"}
               </button>
             </div>
           </div>
