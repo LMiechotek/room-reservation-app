@@ -77,9 +77,9 @@ export default function AdminReservationPanel() {
     const fetchInitialData = async () => {
       try {
         const [roomsRes, usersRes, reservationsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`, { credentials: "include" }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`, { credentials: "include" }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`, { credentials: "include" }),
+          fetch("/api/rooms", { credentials: "include" }),
+          fetch("/api/users", { credentials: "include" }),
+          fetch("/api/reservations", { credentials: "include" }),
         ]);
 
         const [roomsData, usersData, reservationsData] = await Promise.all([
@@ -106,7 +106,7 @@ export default function AdminReservationPanel() {
     const fetchTimeSlots = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/horarios`,
+          "/api/reservations/schedules",
           { credentials: "include" }
         );
         if (res.ok) setTimeSlots(await res.json());
@@ -189,7 +189,7 @@ export default function AdminReservationPanel() {
         };
 
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${editingId}`,
+          `/api/reservations/${editingId}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -217,7 +217,7 @@ export default function AdminReservationPanel() {
           };
 
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/reservas`,
+            "/api/reservations",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -278,7 +278,7 @@ export default function AdminReservationPanel() {
                 closeToast();
                 try {
                   const response = await fetch(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/reservas/${reservation.id}/cancelar`,
+                    `/api/reservations/${reservation.id}/cancel`,
                     {
                       method: "PATCH",
                       headers: { "Content-Type": "application/json" },
