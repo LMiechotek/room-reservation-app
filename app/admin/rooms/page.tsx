@@ -39,7 +39,7 @@ export default function RoomsPanel() {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`, {
+        const res = await fetch("/api/equipments", {
           credentials: "include",
         });
         const data = await res.json();
@@ -51,8 +51,8 @@ export default function RoomsPanel() {
 
     const fetchRooms = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`, {
-          credentials:"include",
+        const res = await fetch("/api/rooms", {
+          credentials: "include",
         });
         const data = await res.json();
         setRooms(data);
@@ -82,7 +82,7 @@ export default function RoomsPanel() {
       if (newSelected[id]) {
         delete newSelected[id];
       } else {
-        newSelected[id] = 1; 
+        newSelected[id] = 1;
       }
       return newSelected;
     });
@@ -119,8 +119,8 @@ export default function RoomsPanel() {
       };
 
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/salas`;
+        ? `/api/rooms/${editingId}`
+        : `/api/rooms`;
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -133,7 +133,7 @@ export default function RoomsPanel() {
       const savedRoom = await res.json();
 
       for (const eqId in equipmentsSelected) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas/${savedRoom.id}/equipamentos`, {
+        await fetch(`/api/rooms/${savedRoom.id}/equipments`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ equipamento_id: eqId, quantidade: equipmentsSelected[eqId] }),
@@ -157,27 +157,41 @@ export default function RoomsPanel() {
     }
   };
 
-  const handleEdit = (room: Room) => {
-    setRoomName(room.nome_numero);
-    setBlock(room.bloco);
-    setCapacity(String(room.capacidade));
-    setType(room.tipo_sala);
-    setMachines(room.quantidade_pcs ? String(room.quantidade_pcs) : "");
-    setEquipmentsSelected(
-      room.equipamentos?.reduce((acc, eq) => {
-        acc[eq.id] = 1; 
-        return acc;
-      }, {} as { [key: string]: number }) || {}
-    );
-    setEditingId(room.id);
-    setActiveTab("form");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  const handleEdit = async (room: Room) => {
+    try {
+      const res = await fetch(`/api/rooms/${room.id}`, {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      setRoomName(data.nome_numero);
+      setBlock(data.bloco);
+      setCapacity(String(data.capacidade));
+      setType(data.tipo_sala);
+      setMachines(data.quantidade_pcs ? String(data.quantidade_pcs) : "");
+
+      const selected: { [key: string]: number } = {};
+
+      data.equipamentos?.forEach((eq: any) => {
+        selected[eq.id] = eq.quantidade;
+      });
+
+      setEquipmentsSelected(selected);
+
+      setEditingId(room.id);
+      setActiveTab("form");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (error) {
+      toast.error("Erro ao carregar dados da sala");
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Deseja realmente excluir esta sala?")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}`, {
+      const res = await fetch(`/api/rooms/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Erro ao excluir sala");
@@ -194,17 +208,15 @@ export default function RoomsPanel() {
         <div className="max-w-5xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("form")}
             >
               <Plus size={16} /> Cadastro
             </button>
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("list")}
             >
               <List size={16} /> Lista
@@ -291,37 +303,36 @@ export default function RoomsPanel() {
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-2">
                     {
-                    equipments
-                    .filter((item) => !(item.nome === "Computadores" && type === "laboratorio"))
-                    .map((item) => (
-                      <label
-                        key={item.id}
-                        className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${
-                          equipmentsSelected[item.id]
-                            ? "border-blue-500 bg-blue-50"
-                            : "border-gray-200 hover:bg-gray-50"
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!equipmentsSelected[item.id]}
-                          onChange={() => toggleEquipment(item.id)}
-                          className="accent-blue-600"
-                        />
-                        <span className="text-sm text-gray-700">{item.nome}</span>
-                        {equipmentsSelected[item.id] && (
-                          <input
-                            type="number"
-                            value={equipmentsSelected[item.id]}
-                            min={1}
-                            onChange={(e) =>
-                              updateEquipmentQuantity(item.id, Math.max(1, Number(e.target.value)))
-                            }
-                            className="w-16 border rounded px-2 py-1 text-sm"
-                          />
-                        )}
-                      </label>
-                    ))}
+                      equipments
+                        .filter((item) => !(item.nome === "Computadores" && type === "laboratorio"))
+                        .map((item) => (
+                          <label
+                            key={item.id}
+                            className={`flex items-center gap-3 border rounded-xl px-4 py-3 cursor-pointer transition ${equipmentsSelected[item.id]
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-200 hover:bg-gray-50"
+                              }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={!!equipmentsSelected[item.id]}
+                              onChange={() => toggleEquipment(item.id)}
+                              className="accent-blue-600"
+                            />
+                            <span className="text-sm text-gray-700">{item.nome}</span>
+                            {equipmentsSelected[item.id] && (
+                              <input
+                                type="number"
+                                value={equipmentsSelected[item.id]}
+                                min={1}
+                                onChange={(e) =>
+                                  updateEquipmentQuantity(item.id, Math.max(1, Number(e.target.value)))
+                                }
+                                className="w-16 border rounded px-2 py-1 text-sm"
+                              />
+                            )}
+                          </label>
+                        ))}
                   </div>
                 </div>
                 {type === "laboratorio" && (
