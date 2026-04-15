@@ -39,11 +39,12 @@ export default function ReservationModal({
   onCreated,
 }: Props) {
   const { user } = useAuth();
+  const today = new Date().toISOString().slice(0, 10);
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [subject, setSubject] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(today);
   const [turno, setTurno] = useState("matutino");
   const [selectedLessons, setSelectedLessons] = useState<number[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -55,7 +56,6 @@ export default function ReservationModal({
 
   const isAdmin = user?.tipo === "admin_cpd";
 
-  const today = new Date().toISOString().split("T")[0];
   const lastDayOfMonth = (() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth() + 1, 0)

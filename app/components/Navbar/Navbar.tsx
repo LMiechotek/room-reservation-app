@@ -33,22 +33,10 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/logout`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-
-      if (!response.ok) throw new Error("Falha ao fazer logout");
-
-      logout(); 
-      router.replace("/login");
+      await logout();
       toast.success("Logout realizado com sucesso!");
     } catch (error: any) {
-      console.error("Erro no logout:", error);
-      toast.error(`Erro ao sair: ${error.message}`);
+      toast.error("Erro ao sair");
     }
   };
 
@@ -57,9 +45,8 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-200 bg-white shadow-sm ${
-          navBg ? "border-b border-gray-300" : "border-b border-gray-100"
-        }`}
+        className={`fixed top-0 left-0 w-full z-50 transition-all duration-200 bg-white shadow-sm ${navBg ? "border-b border-gray-300" : "border-b border-gray-100"
+          }`}
       >
         <div className="flex items-center justify-between h-20 w-[90%] mx-auto">
           <div className="flex items-center min-w-30 md:min-w-55">
@@ -96,9 +83,8 @@ export default function Navbar() {
           <div className="hidden xl:flex items-center space-x-6 md:space-x-10">
             <Link
               href="/"
-              className={`text-base font-medium transition-all duration-200 ${
-                pathname === "/" ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
-              }`}
+              className={`text-base font-medium transition-all duration-200 ${pathname === "/" ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
+                }`}
             >
               Início
             </Link>
@@ -109,11 +95,10 @@ export default function Navbar() {
                 <Link
                   key={link.id}
                   href={link.url}
-                  className={`text-base font-medium transition-all duration-200 ${
-                    pathname === link.url
+                  className={`text-base font-medium transition-all duration-200 ${pathname === link.url
                       ? "text-blue-600"
                       : "text-[#1E3A8A] hover:text-blue-600"
-                  }`}
+                    }`}
                 >
                   {link.label}
                 </Link>

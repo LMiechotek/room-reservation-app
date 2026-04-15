@@ -6,13 +6,13 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { message: "Não autenticado" },
+        { error: "Não autenticado" },
         { status: 401 }
       );
     }
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/salas`,
       {
         method: "GET",
         headers: {
@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
       status: response.status,
     });
   } catch (error) {
-    console.error("GET equipments error:", error);
+    console.error("Erro rooms GET route:", error);
 
     return NextResponse.json(
-      { message: "Erro interno ao buscar equipamentos" },
+      { error: "Erro interno ao buscar salas" },
       { status: 500 }
     );
   }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     if (!token) {
       return NextResponse.json(
-        { message: "Não autenticado" },
+        { error: "Não autenticado" },
         { status: 401 }
       );
     }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`,
+      `${process.env.NEXT_PUBLIC_API_URL}/api/salas`,
       {
         method: "POST",
         headers: {
@@ -68,10 +68,10 @@ export async function POST(request: NextRequest) {
       status: response.status,
     });
   } catch (error) {
-    console.error("POST equipments error:", error);
+    console.error("Erro rooms POST route:", error);
 
     return NextResponse.json(
-      { message: "Erro interno ao salvar equipamento" },
+      { error: "Erro interno ao criar sala" },
       { status: 500 }
     );
   }

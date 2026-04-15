@@ -26,6 +26,7 @@ type Reservation = {
 type RoomFilter = "todos" | "sala_aula" | "laboratorio";
 
 export default function Rooms() {
+  const today = new Date().toISOString().slice(0, 10);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
@@ -34,8 +35,8 @@ export default function Rooms() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [search, setSearch] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [date, setDate] = useState(today);
+  const [time] = useState("");
   const [roomFilter, setRoomFilter] = useState<RoomFilter>("todos");
   const [mounted, setMounted] = useState(false); 
 
@@ -84,7 +85,6 @@ export default function Rooms() {
       const roomsData = await roomsResponse.json();
       const reservationsData = await reservationsResponse.json();
 
-      const today = new Date().toISOString().slice(0, 10);
       setReservations(reservationsData);
 
       const formattedRooms: Room[] = roomsData.map((room: any) => {
@@ -193,13 +193,6 @@ export default function Rooms() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full md:w-auto px-4 py-2 rounded-lg outline-none bg-white text-sm md:text-base"
-              />
-
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
                 className="w-full md:w-auto px-4 py-2 rounded-lg outline-none bg-white text-sm md:text-base"
               />
 

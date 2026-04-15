@@ -8,11 +8,13 @@
 - [x] retirar campo edição de nome do responsável do usuário professor
 - [x] retirar campo de observação
 - [x] retirar botão de reserva caso não esteja logado
-- [ ] incluir campo de horário da aula no modal de reserva
+- [x] incluir campo de horário da aula no modal de reserva
+- [x] remover seleção de horario do filtro
+- [x] remover escolha de data do modal de reserva (buscar do filtro)
+- [ ] desativar opção de turno caso todos os horarios estejam ocupados
 
 # app/rooms/id
 - [x] rollback caso usuário não salve alteração
-- [ ] verificar possibilidade de mascarar id
 - [x] remover informação tag ativa
 
 # app/reservations

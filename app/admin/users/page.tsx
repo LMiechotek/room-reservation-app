@@ -17,6 +17,7 @@ import {
   Save
 } from "lucide-react";
 import { toast } from "react-toastify";
+import ConfirmModal from "@/app/components/ui/ConfirmModal";
 
 type UserType = "professor" | "admin_cpd";
 
@@ -49,16 +50,19 @@ export default function UserPanel() {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<UserData[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`);
+        const res = await fetch("/api/users", {
+          credentials: "include",
+        });
         const data = await res.json();
 
         const activeUsers = data.filter((u: UserData) => u.ativo !== false);
         setUsers(activeUsers);
-        
+
       } catch (error) {
         console.error(error);
         toast.error("Não foi possível carregar os usuários");
@@ -91,12 +95,17 @@ export default function UserPanel() {
     setLoading(true);
 
     try {
-      const payload: any = { nome: name, email, tipo: userType };
+      const payload: any = {
+        nome: name,
+        email,
+        tipo: userType,
+        ativo: true,
+      };
       if (!editingId) payload.senha = password;
 
       const url = editingId
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${editingId}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/usuarios`;
+        ? `/api/users/${editingId}`
+        : `/api/users`;
       const method = editingId ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -108,13 +117,13 @@ export default function UserPanel() {
       if (!response.ok) {
         if (response.status === 400) {
           const json = await response.json();
-          if (json.error === "E-mail deve ser institucional (@uniuv.edu.br ou @unespar.edu.br)"){
+          if (json.error === "E-mail deve ser institucional (@uniuv.edu.br ou @unespar.edu.br)") {
             toast.error("O email deve terminar em uniuv.edu.br ou unespar.edu.br");
             return;
           }
         } else if (response.status === 500) {
           const json = await response.json();
-          if (json.error === "Unable to validate email address: invalid format"){
+          if (json.error === "Unable to validate email address: invalid format") {
             toast.error("formato de endereço de email inválido");
             return;
           }
@@ -157,43 +166,54 @@ export default function UserPanel() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Deseja realmente excluir este usuário?")) return;
+  const confirmDelete = async () => {
+    if (!deleteId) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${id}`, {
+      const res = await fetch(`/api/users/${deleteId}`, {
         method: "DELETE",
       });
+
       if (!res.ok) {
         toast.error("Erro ao excluir usuário");
         return;
       }
 
+      setUsers(users.filter((u) => u.id !== deleteId));
       toast.success("Usuário excluído!");
-      setUsers(users.filter((u) => u.id !== id));
+
     } catch (error) {
       console.error(error);
       toast.error("Erro ao excluir usuário");
+    } finally {
+      setDeleteId(null);
     }
   };
 
   return (
     <>
+      <ConfirmModal
+        open={!!deleteId}
+        title="Excluir usuário"
+        description="Essa ação não pode ser desfeita. Deseja realmente excluir este usuário?"
+        confirmText="Sim, excluir"
+        cancelText="Cancelar"
+        onCancel={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+      />
       <div className="min-h-screen pt-24 bg-linear-to-br from-blue-900 via-blue-700 to-teal-500 px-4 py-10">
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="flex justify-center gap-4 mb-6">
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("form")}
             >
               <Plus size={16} /> Cadastro
             </button>
             <button
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${
-                activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
-              }`}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "list" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
+                }`}
               onClick={() => setActiveTab("list")}
             >
               <List size={16} /> Lista
@@ -367,7 +387,7 @@ export default function UserPanel() {
                         </button>
                         <button
                           className="flex items-center gap-1 text-red-600 hover:text-red-800 font-semibold"
-                          onClick={() => handleDelete(u.id)}
+                          onClick={() => setDeleteId(u.id)}
                         >
                           <Trash2 size={16} /> Excluir
                         </button>

@@ -47,3 +47,23 @@ export async function PUT(request: NextRequest, context: Context) {
     status: response.status,
   });
 }
+export async function DELETE(request: NextRequest, context: Context) {
+  const token = request.cookies.get("token")?.value;
+  const { id } = await context.params;
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${id}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  return NextResponse.json(data, {
+    status: response.status,
+  });
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import ReservationCard from "./Cards/ReservationCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-toastify";
+import { label } from "framer-motion/client";
 
 type Reservation = {
   id: string;
@@ -27,7 +28,7 @@ export default function ReservationsPage() {
   const [filteredReservations, setFilteredReservations] = useState<Reservation[]>([]);
   const [search, setSearch] = useState("");
   const [date, setDate] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"todas" | "ativa" | "cancelada">("todas");
+  const [statusFilter, setStatusFilter] = useState<"todas" | "ativa" | "cancelada" | "concluida">("todas");
 
   useEffect(() => {
     if (user) fetchReservations();
@@ -37,7 +38,7 @@ export default function ReservationsPage() {
     if (!user) return;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`, {
+      const response = await fetch("/api/reservations", {
         credentials: "include",
       });
 
@@ -91,9 +92,20 @@ export default function ReservationsPage() {
 
   const displayedReservations = filteredReservations.filter((r) => {
     if (statusFilter === "todas") return true;
-    if (statusFilter === "cancelada")
+
+    if (statusFilter === "ativa") {
+      return r.status === "ativa" || r.status === "aberta";
+    }
+
+    if (statusFilter === "cancelada") {
       return r.status === "cancelada" || r.status === "cancelado";
-    return r.status === "ativa" || r.status === "aberta";
+    }
+
+    if (statusFilter === "concluida") {
+      return r.status === "concluida";
+    }
+
+    return true;
   });
 
   const statusCounts = {
@@ -103,6 +115,9 @@ export default function ReservationsPage() {
     ).length,
     cancelada: filteredReservations.filter(
       (r) => r.status === "cancelada" || r.status === "cancelado"
+    ).length,
+    concluida: filteredReservations.filter(
+      (r) => r.status === "concluida"
     ).length,
   };
 
@@ -153,6 +168,7 @@ export default function ReservationsPage() {
                     { key: "todas", label: "Todas", count: statusCounts.todas },
                     { key: "ativa", label: "Ativas", count: statusCounts.ativa },
                     { key: "cancelada", label: "Canceladas", count: statusCounts.cancelada },
+                    { key: "concluida", label: "Concluídas", count: statusCounts.concluida }
                   ] as const
                 ).map(({ key, label, count }) => {
                   const isActive = statusFilter === key;
@@ -166,6 +182,9 @@ export default function ReservationsPage() {
                     cancelada: isActive
                       ? "bg-red-500 text-white shadow-md"
                       : "text-white hover:bg-red-500/30",
+                    concluida: isActive
+                      ? "bg-gray-500 text-white shadow-md"
+                      : "text-white hover:bg-gray-500/30"
                   };
                   return (
                     <button
@@ -175,9 +194,8 @@ export default function ReservationsPage() {
                     >
                       {label}
                       <span
-                        className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-                          isActive ? "bg-white/25" : "bg-white/15"
-                        }`}
+                        className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${isActive ? "bg-white/25" : "bg-white/15"
+                          }`}
                       >
                         {count}
                       </span>
