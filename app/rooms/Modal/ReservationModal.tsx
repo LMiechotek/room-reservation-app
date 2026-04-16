@@ -23,7 +23,7 @@ type SlotInfo = {
   hora_fim: string;
 };
 
-type HorariosResponse = Record<string, Record<string, SlotInfo>>;
+type SchedulesResponse = Record<string, Record<string, SlotInfo>>;
 
 type ExistingReservation = {
   sala_id: string;
@@ -45,11 +45,11 @@ export default function ReservationModal({
   const [selectedUserId, setSelectedUserId] = useState("");
   const [subject, setSubject] = useState("");
   const [date, setDate] = useState(today);
-  const [turno, setTurno] = useState("matutino");
+  const [shift, setShift] = useState("matutino");
   const [selectedLessons, setSelectedLessons] = useState<number[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [horarios, setHorarios] = useState<HorariosResponse>({});
+  const [schedules, setSchedules] = useState<SchedulesResponse>({});
   const [takenSlots, setTakenSlots] = useState<number[]>([]);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -68,8 +68,8 @@ export default function ReservationModal({
       try {
         const response = await fetch("/api/reservations/schedules");
         if (response.ok) {
-          const data: HorariosResponse = await response.json();
-          setHorarios(data);
+          const data: SchedulesResponse = await response.json();
+          setSchedules(data);
         }
       } catch (error) {
         console.error("Erro ao buscar horários:", error);
@@ -97,7 +97,7 @@ export default function ReservationModal({
             (r) =>
               r.sala_id === roomId &&
               r.data.slice(0, 10) === date &&
-              r.turno === turno &&
+              r.turno === shift &&
               (r.status === "ativa" || r.status === "aberta")
           )
           .map((r) => r.aula_numero);
@@ -109,7 +109,7 @@ export default function ReservationModal({
     };
 
     fetchTakenSlots();
-  }, [date, turno, roomId]);
+  }, [date, shift, roomId]);
 
   useEffect(() => {
     setSelectedLessons((prev) => prev.filter((n) => !takenSlots.includes(n)));
@@ -154,8 +154,8 @@ export default function ReservationModal({
     fetchUsers();
   }, [isAdmin]);
 
-  const currentSlots = horarios[turno]
-    ? Object.entries(horarios[turno]).map(([num, info]) => ({
+  const currentSlots = schedules[shift]
+    ? Object.entries(schedules[shift]).map(([num, info]) => ({
         numero: Number(num),
         horario: `${info.hora_inicio}-${info.hora_fim}`,
       }))
@@ -216,7 +216,7 @@ export default function ReservationModal({
           usuario_id: isAdmin ? selectedUserId : user.id,
           criado_por: user.id,
           data: date,
-          turno,
+          turno:shift,
           aula_numero: aulaNumero,
           disciplina: subject,
         };
@@ -327,8 +327,8 @@ export default function ReservationModal({
               Turno
             </label>
             <select
-              value={turno}
-              onChange={(e) => setTurno(e.target.value)}
+              value={shift}
+              onChange={(e) => setShift(e.target.value)}
               className="w-full border rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="matutino">Matutino</option>
