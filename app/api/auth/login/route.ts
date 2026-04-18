@@ -16,7 +16,6 @@ export async function POST(request: NextRequest) {
     );
 
     const data = await backendResponse.json();
-    console.log("LOGIN BACKEND RESPONSE:", data);
 
     if (!backendResponse.ok) {
       return NextResponse.json(
