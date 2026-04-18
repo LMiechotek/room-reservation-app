@@ -32,6 +32,12 @@ const adminFeatures = [
     icon: BookOpen,
     url: "/admin/reservation",
   },
+  {
+    id: 5,
+    title: "Logs",
+    icon: BookOpen,
+    url: "/admin/logs",
+  },
 ];
 
 export default function AdminDashboard() {

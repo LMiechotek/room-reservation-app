@@ -10,7 +10,8 @@ export default function Sidebar() {
     { label: "Usuários", url: "/admin/users" },
     { label: "Salas", url: "/admin/rooms" },
     { label: "Equipamentos", url: "/admin/equipment" },
-    { label: "Reservas", url: "/admin/reservation"}
+    { label: "Reservas", url: "/admin/reservation"},
+    { label: "Logs", url: "/admin/logs"},
   ];
 
   return (
