@@ -74,10 +74,10 @@ export default function Rooms() {
   const fetchRoomsData = async () => {
     try {
       const [roomsResponse, reservationsResponse] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`, {
+        fetch("/api/rooms", {
           credentials: "include",
         }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reservas`, {
+        fetch("/api/reservations", {
           credentials: "include",
         }),
       ]);
