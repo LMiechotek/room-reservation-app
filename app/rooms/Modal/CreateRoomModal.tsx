@@ -54,7 +54,7 @@ export default function CreateRoomModal({ onClose, onCreated }: Props) {
   useEffect(() => {
     const fetchEquipments = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos`);
+      const res = await fetch("/api/equipments");
         if (!res.ok) throw new Error("Erro ao buscar equipamentos");
         const data = await res.json();
         setEquipments(data);
@@ -116,7 +116,7 @@ export default function CreateRoomModal({ onClose, onCreated }: Props) {
         tipo_sala: type,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/salas`, {
+      const res = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -133,7 +133,7 @@ export default function CreateRoomModal({ onClose, onCreated }: Props) {
 
       for (const eq of equipmentsSelected) {
         const eqRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/salas/${roomId}/equipamentos`,
+          `/api/rooms/${roomId}/equipments`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
