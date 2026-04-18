@@ -1,18 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {
-  User,
-  BookOpen,
-  CalendarDays,
-  Clock3,
-  X,
-  Edit,
-  List,
-  Plus,
-  Save,
-  ChevronDown,
-} from "lucide-react";
+import {User, BookOpen, CalendarDays, Clock3, X, Edit, List, Plus, Save, ChevronDown,} from "lucide-react";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
@@ -684,7 +673,11 @@ export default function AdminReservationPanel() {
 
                         <div className="flex gap-3 mt-5">
                           <button
-                            className="flex-1 flex items-center justify-center gap-2 bg-yellow-100 text-yellow-700 hover:bg-yellow-200 py-2 rounded-xl font-semibold transition"
+                            disabled={r.status === "cancelada"}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl font-semibold transition ${r.status === "cancelada"
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                              : "bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+                              }`}
                             onClick={() => handleEdit(r)}
                           >
                             <Edit size={16} />
