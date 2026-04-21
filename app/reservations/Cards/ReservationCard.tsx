@@ -67,7 +67,7 @@ export default function ReservationCard({ reservation, isAdmin }: Props) {
   const statusColor =
     statusStyles[status as keyof typeof statusStyles] || "bg-gray-500 text-white";
 
-  const formattedDate = new Date(data).toLocaleDateString("pt-BR");
+  const formattedDate = data.slice(0, 10).split("-").reverse().join("/");
   const formattedStartHour = hora_inicio?.slice(0, 5);
   const formattedEndHour = hora_fim?.slice(0, 5);
 

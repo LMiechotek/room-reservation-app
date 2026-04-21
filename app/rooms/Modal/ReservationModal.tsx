@@ -39,7 +39,7 @@ export default function ReservationModal({
   onCreated,
 }: Props) {
   const { user } = useAuth();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA");
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
