@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Search, Menu, X } from "lucide-react";
 import MobileNav from "./MobileNavbar";
 import { Navlinks } from "@/app/home/constants/constant";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "react-toastify";
 
@@ -17,8 +17,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   const isLoggedIn = !!user;
   const isAdmin = user?.tipo === "admin_cpd";
@@ -35,12 +34,12 @@ export default function Navbar() {
     try {
       await logout();
       toast.success("Logout realizado com sucesso!");
-    } catch (error: any) {
+    } catch {
       toast.error("Erro ao sair");
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || loading) return null;
 
   return (
     <>
@@ -49,6 +48,7 @@ export default function Navbar() {
           }`}
       >
         <div className="flex items-center justify-between h-20 w-[90%] mx-auto">
+
           <div className="flex items-center min-w-30 md:min-w-55">
             <Link href="/">
               <Image
@@ -81,21 +81,29 @@ export default function Navbar() {
           )}
 
           <div className="hidden xl:flex items-center space-x-6 md:space-x-10">
+
             <Link
               href="/"
-              className={`text-base font-medium transition-all duration-200 ${pathname === "/" ? "text-blue-600" : "text-[#1E3A8A] hover:text-blue-600"
+              className={`text-base font-medium ${pathname === "/"
+                  ? "text-blue-600"
+                  : "text-[#1E3A8A] hover:text-blue-600"
                 }`}
             >
               Início
             </Link>
 
             {Navlinks.map((link) => {
-              if (link.url === "/login" && (isLoggedIn || pathname === "/login")) return null;
+              if (
+                link.url === "/login" &&
+                (isLoggedIn || pathname === "/login")
+              )
+                return null;
+
               return (
                 <Link
                   key={link.id}
                   href={link.url}
-                  className={`text-base font-medium transition-all duration-200 ${pathname === link.url
+                  className={`text-base font-medium ${pathname === link.url
                       ? "text-blue-600"
                       : "text-[#1E3A8A] hover:text-blue-600"
                     }`}
@@ -108,26 +116,37 @@ export default function Navbar() {
             {isAdmin && pathname !== "/admin" && (
               <Link
                 href="/admin"
-                className="text-base font-medium text-[#1E3A8A] hover:text-blue-600 transition-all duration-200"
+                className="text-base font-medium text-[#1E3A8A] hover:text-blue-600"
               >
                 Painel Administrativo
               </Link>
             )}
 
             {isLoggedIn && (
-              <button
-                onClick={handleLogout}
-                className="text-base text-[#1E3A8A] hover:text-red-500 font-medium transition-all duration-200"
-              >
-                Logout
-              </button>
+              <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
+
+                <div className="w-9 h-9 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                  {user?.nome?.[0]?.toUpperCase() || "U"}
+                </div>
+
+                <span className="text-sm text-[#1E3A8A] font-medium whitespace-nowrap">
+                  {user?.nome || "Usuário"}
+                </span>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1 text-sm text-gray-500 hover:text-red-500 transition"
+                >
+                  Sair
+                </button>
+              </div>
             )}
           </div>
 
           <div className="xl:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-[#1E3A8A] hover:text-blue-600 transition"
+              className="p-2 text-[#1E3A8A]"
             >
               {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
@@ -135,7 +154,10 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <MobileNav showNav={mobileMenuOpen} closeNav={() => setMobileMenuOpen(false)} />
+      <MobileNav
+        showNav={mobileMenuOpen}
+        closeNav={() => setMobileMenuOpen(false)}
+      />
 
       <div className="h-20" />
     </>
