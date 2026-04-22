@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (res.status === 401) {
           setUser(null);
+          setLoading(false); // 👈 importante
           return;
         }
 

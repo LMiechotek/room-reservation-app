@@ -48,3 +48,47 @@ export async function DELETE(
     );
   }
 }
+
+export async function PUT(
+  request: NextRequest,
+  context: RouteContext
+) {
+  try {
+    const { id } = await context.params;
+    const token = request.cookies.get("token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { message: "Não autenticado" },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/equipamentos/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data = await response.json();
+
+    return NextResponse.json(data, {
+      status: response.status,
+    });
+  } catch (error) {
+    console.error("PUT equipment proxy error:", error);
+
+    return NextResponse.json(
+      { error: "Erro interno ao atualizar equipamento" },
+      { status: 500 }
+    );
+  }
+}

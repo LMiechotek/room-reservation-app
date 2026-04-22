@@ -39,7 +39,7 @@ export default function ReservationModal({
   onCreated,
 }: Props) {
   const { user } = useAuth();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString("en-CA");
 
   const [users, setUsers] = useState<UserType[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
@@ -249,15 +249,10 @@ export default function ReservationModal({
     }
   };
 
-  const handleBackgroundClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose();
-  };
+
 
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4"
-      onClick={handleBackgroundClick}
-    >
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
       <div className="w-full max-w-lg bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-200 flex flex-col max-h-[90vh]">
         <div className="flex flex-col items-center p-6 border-b border-gray-200">
           <Image

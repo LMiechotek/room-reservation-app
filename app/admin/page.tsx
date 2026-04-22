@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { User, Laptop, Home, ArrowRight, BookOpen } from "lucide-react";
+import { User, Laptop, Home, ArrowRight, BookOpen, FileText } from "lucide-react";
 
 const adminFeatures = [
   {
@@ -32,6 +32,19 @@ const adminFeatures = [
     icon: BookOpen,
     url: "/admin/reservation",
   },
+  {
+    id: 5,
+    title: "Logs",
+    icon: BookOpen,
+    url: "/admin/logs",
+  },
+  {
+    id: 6,
+    title: "Relatórios",
+    description: "Exportação de dados, análises e relatórios em PDF/CSV.",
+    icon: FileText,
+    url: "/admin/reports",
+  }
 ];
 
 export default function AdminDashboard() {

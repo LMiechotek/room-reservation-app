@@ -1,4 +1,5 @@
 "use client";
+import { label } from "framer-motion/client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,7 +11,9 @@ export default function Sidebar() {
     { label: "Usuários", url: "/admin/users" },
     { label: "Salas", url: "/admin/rooms" },
     { label: "Equipamentos", url: "/admin/equipment" },
-    { label: "Reservas", url: "/admin/reservation"}
+    { label: "Reservas", url: "/admin/reservation"},
+    { label: "Logs", url: "/admin/logs"},
+    { label:"Relatórios", url: "/admin/reports"}
   ];
 
   return (

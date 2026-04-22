@@ -110,51 +110,112 @@ export default function RoomsPanel() {
   };
 
   const handleSubmit = async () => {
-    if (!validateFields()) return;
+    const newErrors: FormErrors = {};
+
+    if (!roomName.trim()) {
+      newErrors.roomName = "O nome da sala é obrigatório";
+    }
+
+    if (!block.trim()) {
+      newErrors.block = "O bloco é obrigatório";
+    }
+
+    if (!capacity || isNaN(Number(capacity)) || Number(capacity) <= 0) {
+      newErrors.capacity = "Capacidade deve ser um número válido";
+    }
+
+    if (type === "laboratorio") {
+      if (!machines || isNaN(Number(machines)) || Number(machines) <= 0) {
+        newErrors.type = "Informe a quantidade de PCs válida";
+      }
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      toast.warning("Corrija os campos obrigatórios");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const roomPayload = {
-        nome_numero: roomName,
-        bloco: block,
+        nome_numero: roomName.trim(),
+        bloco: block.trim(),
         capacidade: Number(capacity),
         tipo_sala: type,
-        quantidade_pcs: type === "laboratorio" ? Number(machines) : undefined,
+        quantidade_pcs:
+          type === "laboratorio" ? Number(machines) : undefined,
       };
 
       const url = editingId
         ? `/api/rooms/${editingId}`
         : `/api/rooms`;
+
       const method = editingId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(roomPayload),
       });
 
-      if (!res.ok) throw new Error("Erro ao salvar sala");
-      const savedRoom = await res.json();
+      const data = await res.json();
 
-      for (const eqId in equipmentsSelected) {
-        await fetch(`/api/rooms/${savedRoom.id}/equipments`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ equipamento_id: eqId, quantidade: equipmentsSelected[eqId] }),
-        });
+      if (!res.ok) {
+        if (res.status === 409) {
+          setErrors({
+            roomName: "Sala já cadastrada",
+            block: "Já existe neste bloco",
+          });
+
+          throw new Error(
+            data.error || "Essa sala já está cadastrada neste bloco"
+          );
+        }
+
+        if (res.status === 400) {
+          throw new Error(data.error || "Dados inválidos");
+        }
+
+        throw new Error(data.error || "Erro ao salvar sala");
       }
 
-      toast.success(editingId ? "Sala atualizada!" : "Sala cadastrada!");
+      const savedRoom = data;
+
+      await Promise.all(
+        Object.entries(equipmentsSelected).map(([eqId, qty]) =>
+          fetch(`/api/rooms/${savedRoom.id}/equipments`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              equipamento_id: eqId,
+              quantidade: qty,
+            }),
+          })
+        )
+      );
+
+      toast.success(
+        editingId ? "Sala atualizada com sucesso!" : "Sala cadastrada com sucesso!"
+      );
+
       if (editingId) {
-        setRooms(rooms.map((r) => (r.id === savedRoom.id ? savedRoom : r)));
+        setRooms((prev) =>
+          prev.map((r) => (r.id === savedRoom.id ? savedRoom : r))
+        );
       } else {
-        setRooms([...rooms, savedRoom]);
+        setRooms((prev) => [...prev, savedRoom]);
       }
 
       resetForm();
       setActiveTab("list");
+
     } catch (error: any) {
-      console.error(error);
+      console.error("Erro ao salvar sala:", error);
       toast.error(error.message || "Erro ao salvar sala");
     } finally {
       setLoading(false);
@@ -238,7 +299,10 @@ export default function RoomsPanel() {
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition ${activeTab === "form" ? "bg-blue-700 text-white" : "bg-white text-blue-700"
                 }`}
-              onClick={() => setActiveTab("form")}
+              onClick={() => {
+                resetForm();
+                setActiveTab("form");
+              }}
             >
               <Plus size={16} /> Cadastro
             </button>

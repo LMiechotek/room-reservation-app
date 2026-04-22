@@ -27,6 +27,11 @@ export default function LoginPage() {
       return;
     }
 
+    if (!email.endsWith("@unespar.edu.br")) {
+      toast.error("Use um email institucional @unespar.edu.br");
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -36,7 +41,7 @@ export default function LoginPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email, senha: password }),
-          credentials: "include", 
+          credentials: "include",
         }
       );
 
