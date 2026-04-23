@@ -2,7 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { getReport } from "@/services/reportsService";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, } from "recharts";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { motion } from "framer-motion";
 
 export default function ReportsPage() {
@@ -14,7 +23,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     loadData();
-  }, [period, month, year]);
+  }, [period, month, year, semester]);
 
   function getWeekRange() {
     const now = new Date();
@@ -30,22 +39,10 @@ export default function ReportsPage() {
     };
   }
 
-  function getSemesterRange(year: number, semester: number) {
-    if (semester === 1) {
-      return {
-        startDate: `${year}-01-01`,
-        endDate: `${year}-06-30`,
-      };
-    }
-
-    return {
-      startDate: `${year}-07-01`,
-      endDate: `${year}-12-31`,
-    };
-  }
-
   async function loadData() {
     try {
+      setData(null); 
+
       const today = new Date().toISOString().slice(0, 10);
       let res;
 
@@ -98,7 +95,7 @@ export default function ReportsPage() {
     }
 
     if (period === "semester") {
-      return `${base}/semestral?semestre=1&ano=${year}&formato=${format}`;
+      return `${base}/semestral?semestre=${semester}&ano=${year}&formato=${format}`;
     }
 
     return "";
@@ -119,23 +116,19 @@ export default function ReportsPage() {
   const rawPerDay =
     period === "daily"
       ? [
-        {
-          data: new Date().toISOString().slice(0, 10),
-          total_reservas: data?.resumo?.total_reservas ?? 0,
-          canceladas: data?.resumo?.canceladas ?? 0,
-        },
-      ]
+          {
+            data: new Date().toISOString().slice(0, 10),
+            total_reservas: data?.resumo?.total_reservas ?? 0,
+            canceladas: data?.resumo?.canceladas ?? 0,
+          },
+        ]
       : period === "semester"
-        ? (data?.por_dia?.length
-          ? data.por_dia
-          : [
-            {
-              data: "Semestre",
-              total_reservas: data?.resumo?.total_reservas ?? 0,
-              canceladas: data?.resumo?.canceladas ?? 0,
-            },
-          ])
-        : data?.por_dia ?? [];
+      ? (data?.por_mes ?? []).map((m: any) => ({
+          data: m.nome_mes,
+          total_reservas: m.total_reservas,
+          canceladas: m.canceladas,
+        }))
+      : data?.por_dia ?? [];
 
   const perDay =
     period === "semester"
@@ -155,7 +148,6 @@ export default function ReportsPage() {
       .sort((a, b) => a._date.getTime() - b._date.getTime())
       .map(({ _date, ...rest }) => rest);
   }
-
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 px-6 py-8 space-y-10">
