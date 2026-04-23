@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getReport } from "@/services/reportsService";
-import {BarChart, Bar, LineChart, Line, XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, } from "recharts";
 import { motion } from "framer-motion";
 
 export default function ReportsPage() {
@@ -10,6 +10,7 @@ export default function ReportsPage() {
   const [period, setPeriod] = useState("monthly");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [semester, setSemester] = useState(1);
 
   useEffect(() => {
     loadData();
@@ -67,7 +68,7 @@ export default function ReportsPage() {
 
         case "semester":
           res = await getReport("semester", {
-            semester: 1,
+            semester,
             year,
           });
           break;
@@ -105,7 +106,7 @@ export default function ReportsPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen p-6 bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen p-6 bg-linear-to-br from-gray-50 via-white to-gray-100">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <SkeletonCard />
           <SkeletonCard />
@@ -115,7 +116,7 @@ export default function ReportsPage() {
     );
   }
 
-  const porDia =
+  const rawPerDay =
     period === "daily"
       ? [
         {
@@ -136,34 +137,51 @@ export default function ReportsPage() {
           ])
         : data?.por_dia ?? [];
 
-  const porSala = data?.por_sala ?? [];
+  const perDay =
+    period === "semester"
+      ? rawPerDay
+      : normalizeAndSortByDate(rawPerDay);
+
+  const perRoom = data?.por_sala ?? [];
+
+  function normalizeAndSortByDate(data: any[]) {
+    if (!Array.isArray(data)) return [];
+
+    return [...data]
+      .map((item) => ({
+        ...item,
+        _date: new Date(item.data),
+      }))
+      .sort((a, b) => a._date.getTime() - b._date.getTime())
+      .map(({ _date, ...rest }) => rest);
+  }
 
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6 space-y-8">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 px-6 py-8 space-y-10">
 
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-800">
             Relatórios
           </h1>
-          <p className="text-gray-500">
+          <p className="text-gray-500 mt-1 text-sm">
             Monitoramento inteligente das reservas
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-xs font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full w-fit shadow-sm border-green-100">
           <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
           Sistema online
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-3 bg-white/60 dark:bg-gray-800/60 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-white/40">
+      <div className="flex flex-wrap gap-3 bg-white/70 backdrop-blur-xl p-4 rounded-2xl shadow-sm border border-white/40">
 
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value)}
-          className="bg-white dark:bg-gray-700 border px-4 py-2 rounded-xl shadow-sm"
+          className="bg-white border border-gray-300 px-4 py-2 rounded-xl shadow-sm"
         >
           <option value="daily">Diário</option>
           <option value="weekly">Semanal</option>
@@ -184,13 +202,13 @@ export default function ReportsPage() {
               min={1}
               max={12}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className="border px-3 py-2 rounded-xl w-24"
+              className="border text-center border-gray-300 px-3 py-2 rounded-xl w-14 shadow-sm"
             />
             <input
               type="number"
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
-              className="border px-3 py-2 rounded-xl w-32"
+              className="border text-center border-gray-300 px-3 py-2 rounded-xl w-24 shadow-sm"
             />
           </motion.div>
         )}
@@ -220,8 +238,8 @@ export default function ReportsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        <ChartCard title="Ocupação por dia" data={porDia}>
-          <BarChart data={porDia}>
+        <ChartCard title="Ocupação por dia" data={perDay}>
+          <BarChart data={perDay}>
             <XAxis dataKey="data" />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
@@ -230,8 +248,8 @@ export default function ReportsPage() {
           </BarChart>
         </ChartCard>
 
-        <ChartCard title="Evolução" data={porDia}>
-          <LineChart data={porDia}>
+        <ChartCard title="Evolução" data={perDay}>
+          <LineChart data={perDay}>
             <XAxis dataKey="data" />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
@@ -248,14 +266,14 @@ export default function ReportsPage() {
 
       </div>
 
-      <div className="bg-white/80 dark:bg-gray-800 p-6 rounded-2xl shadow border">
-        <h3 className="mb-4 font-semibold text-gray-700 dark:text-white">
+      <div className="bg-white/70 backdrop-blur-xl p-6 rounded-2xl shadow-sm border-white/30">
+        <h3 className="mb-4 font-semibold text-gray-700">
           Ranking de salas
         </h3>
 
         <table className="w-full text-sm border-separate border-spacing-y-2">
           <tbody>
-            {porSala.map((room: any) => (
+            {perRoom.map((room: any) => (
               <tr key={room.sala_id}>
                 <td className="py-3 px-4">{room.nome_numero}</td>
                 <td className="px-4">{room.bloco}</td>
@@ -315,8 +333,8 @@ function ChartCard({ title, data, children }: any) {
   const isEmpty = !data || data.length === 0;
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800 p-5 rounded-2xl shadow border">
-      <h3 className="mb-4 font-semibold text-gray-700 dark:text-white">
+    <div className="bg-white/80 p-5 rounded-2xl shadow border">
+      <h3 className="mb-4 font-semibold text-gray-700">
         {title}
       </h3>
 
@@ -335,7 +353,7 @@ function ChartCard({ title, data, children }: any) {
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border">
+    <div className="animate-pulse bg-white p-6 rounded-2xl shadow-sm border">
       <div className="h-4 w-24 bg-gray-200 rounded mb-4" />
       <div className="h-8 w-16 bg-gray-300 rounded" />
     </div>
