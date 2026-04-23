@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getReport } from "@/services/reportsService";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
 import { motion } from "framer-motion";
 
 export default function ReportsPage() {
@@ -25,6 +16,15 @@ export default function ReportsPage() {
     loadData();
   }, [period, month, year, semester]);
 
+  function getLocalDateISO() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
   function getWeekRange() {
     const now = new Date();
     const first = new Date(now);
@@ -34,16 +34,23 @@ export default function ReportsPage() {
     last.setDate(first.getDate() + 6);
 
     return {
-      startDate: first.toISOString().slice(0, 10),
-      endDate: last.toISOString().slice(0, 10),
+      startDate: getLocalDateISOFromDate(first),
+      endDate: getLocalDateISOFromDate(last),
     };
+  }
+
+  function getLocalDateISOFromDate(date: Date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
   }
 
   async function loadData() {
     try {
-      setData(null); 
+      setData(null);
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getLocalDateISO();
       let res;
 
       switch (period) {
@@ -81,7 +88,7 @@ export default function ReportsPage() {
     const base = `${process.env.NEXT_PUBLIC_API_URL}/api/relatorios`;
 
     if (period === "daily") {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = getLocalDateISO();
       return `${base}/diario?data=${today}&formato=${format}`;
     }
 
@@ -117,16 +124,16 @@ export default function ReportsPage() {
     period === "daily"
       ? [
           {
-            data: new Date().toISOString().slice(0, 10),
+            data: getLocalDateISO(),
             total_reservas: data?.resumo?.total_reservas ?? 0,
             canceladas: data?.resumo?.canceladas ?? 0,
           },
         ]
       : period === "semester"
       ? (data?.por_mes ?? []).map((m: any) => ({
-          data: m.nome_mes,
-          total_reservas: m.total_reservas,
-          canceladas: m.canceladas,
+          data: m?.nome_mes ?? "",
+          total_reservas: m?.total_reservas ?? 0,
+          canceladas: m?.canceladas ?? 0,
         }))
       : data?.por_dia ?? [];
 
@@ -135,7 +142,24 @@ export default function ReportsPage() {
       ? rawPerDay
       : normalizeAndSortByDate(rawPerDay);
 
-  const perRoom = data?.por_sala ?? [];
+  const perRoom =
+    period === "daily"
+      ? Object.values(
+          (data?.reservas ?? []).reduce((acc: any, r: any) => {
+            if (!acc[r.sala_id]) {
+              acc[r.sala_id] = {
+                sala_id: r.sala_id,
+                nome_numero: r.nome_numero,
+                bloco: r.bloco,
+                total_reservas: 0,
+              };
+            }
+
+            acc[r.sala_id].total_reservas++;
+            return acc;
+          }, {})
+        ).sort((a: any, b: any) => b.total_reservas - a.total_reservas)
+      : data?.por_sala ?? [];
 
   function normalizeAndSortByDate(data: any[]) {
     if (!Array.isArray(data)) return [];
@@ -143,10 +167,21 @@ export default function ReportsPage() {
     return [...data]
       .map((item) => ({
         ...item,
-        _date: new Date(item.data),
+        _date: new Date(item.data.split("T")[0]), 
       }))
       .sort((a, b) => a._date.getTime() - b._date.getTime())
       .map(({ _date, ...rest }) => rest);
+  }
+
+  function formatDate(valor: string) {
+    if (!valor) return "";
+
+    if (valor.includes("-")) {
+      const [ano, mes, dia] = valor.split("T")[0].split("-");
+      return `${dia}/${mes}`;
+    }
+
+    return valor; 
   }
 
   return (
@@ -232,7 +267,7 @@ export default function ReportsPage() {
 
         <ChartCard title="Ocupação por dia" data={perDay}>
           <BarChart data={perDay}>
-            <XAxis dataKey="data" />
+            <XAxis dataKey="data" tickFormatter={formatDate} />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
             <Bar dataKey="total_reservas" fill="#3B82F6" radius={[6, 6, 0, 0]} />
@@ -242,7 +277,7 @@ export default function ReportsPage() {
 
         <ChartCard title="Evolução" data={perDay}>
           <LineChart data={perDay}>
-            <XAxis dataKey="data" />
+            <XAxis dataKey="data" tickFormatter={formatDate} />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
 
