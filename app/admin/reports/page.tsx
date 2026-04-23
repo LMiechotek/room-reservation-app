@@ -2,16 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getReport } from "@/services/reportsService";
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+import {BarChart, Bar, LineChart, Line, XAxis,YAxis,Tooltip,ResponsiveContainer,} from "recharts";
 import { motion } from "framer-motion";
 
 export default function ReportsPage() {
@@ -24,34 +15,92 @@ export default function ReportsPage() {
     loadData();
   }, [period, month, year]);
 
+  function getWeekRange() {
+    const now = new Date();
+    const first = new Date(now);
+    first.setDate(now.getDate() - now.getDay());
+
+    const last = new Date(first);
+    last.setDate(first.getDate() + 6);
+
+    return {
+      startDate: first.toISOString().slice(0, 10),
+      endDate: last.toISOString().slice(0, 10),
+    };
+  }
+
+  function getSemesterRange(year: number, semester: number) {
+    if (semester === 1) {
+      return {
+        startDate: `${year}-01-01`,
+        endDate: `${year}-06-30`,
+      };
+    }
+
+    return {
+      startDate: `${year}-07-01`,
+      endDate: `${year}-12-31`,
+    };
+  }
+
   async function loadData() {
     try {
-      let res;
       const today = new Date().toISOString().slice(0, 10);
+      let res;
 
-      if (period === "daily") {
-        res = await getReport("daily", { date: today });
-      }
+      switch (period) {
+        case "daily":
+          res = await getReport("daily", { date: today });
+          break;
 
-      if (period === "weekly") {
-        res = await getReport("weekly", {
-          startDate: "2026-04-14",
-          endDate: "2026-04-20",
-        });
-      }
+        case "weekly":
+          const { startDate, endDate } = getWeekRange();
+          res = await getReport("weekly", {
+            startDate,
+            endDate,
+          });
+          break;
 
-      if (period === "monthly") {
-        res = await getReport("monthly", { month, year });
-      }
+        case "monthly":
+          res = await getReport("monthly", { month, year });
+          break;
 
-      if (period === "semester") {
-        res = await getReport("semester", { semester: 1, year });
+        case "semester":
+          res = await getReport("semester", {
+            semester: 1,
+            year,
+          });
+          break;
       }
 
       setData(res);
     } catch (err) {
       console.error(err);
     }
+  }
+
+  function buildExportUrl(format: "pdf" | "csv") {
+    const base = `${process.env.NEXT_PUBLIC_API_URL}/api/relatorios`;
+
+    if (period === "daily") {
+      const today = new Date().toISOString().slice(0, 10);
+      return `${base}/diario?data=${today}&formato=${format}`;
+    }
+
+    if (period === "weekly") {
+      const { startDate, endDate } = getWeekRange();
+      return `${base}/semanal?data_inicio=${startDate}&data_fim=${endDate}&formato=${format}`;
+    }
+
+    if (period === "monthly") {
+      return `${base}/mensal?mes=${month}&ano=${year}&formato=${format}`;
+    }
+
+    if (period === "semester") {
+      return `${base}/semestral?semestre=1&ano=${year}&formato=${format}`;
+    }
+
+    return "";
   }
 
   if (!data) {
@@ -66,8 +115,29 @@ export default function ReportsPage() {
     );
   }
 
-  const porDia = data?.por_dia ?? [];
+  const porDia =
+    period === "daily"
+      ? [
+        {
+          data: new Date().toISOString().slice(0, 10),
+          total_reservas: data?.resumo?.total_reservas ?? 0,
+          canceladas: data?.resumo?.canceladas ?? 0,
+        },
+      ]
+      : period === "semester"
+        ? (data?.por_dia?.length
+          ? data.por_dia
+          : [
+            {
+              data: "Semestre",
+              total_reservas: data?.resumo?.total_reservas ?? 0,
+              canceladas: data?.resumo?.canceladas ?? 0,
+            },
+          ])
+        : data?.por_dia ?? [];
+
   const porSala = data?.por_sala ?? [];
+
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-6 space-y-8">
@@ -162,13 +232,6 @@ export default function ReportsPage() {
 
         <ChartCard title="Evolução" data={porDia}>
           <LineChart data={porDia}>
-            <defs>
-              <linearGradient id="colorLine" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366F1" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-
             <XAxis dataKey="data" />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
@@ -191,23 +254,12 @@ export default function ReportsPage() {
         </h3>
 
         <table className="w-full text-sm border-separate border-spacing-y-2">
-          <thead>
-            <tr className="text-left text-gray-400 text-xs uppercase">
-              <th>Sala</th>
-              <th>Bloco</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-
           <tbody>
             {porSala.map((room: any) => (
-              <tr
-                key={room.sala_id}
-                className="bg-white dark:bg-gray-700 shadow-sm hover:shadow-lg hover:-translate-y-1 transition rounded-xl"
-              >
-                <td className="py-3 px-4 rounded-l-xl">{room.nome_numero}</td>
+              <tr key={room.sala_id}>
+                <td className="py-3 px-4">{room.nome_numero}</td>
                 <td className="px-4">{room.bloco}</td>
-                <td className="px-4 font-semibold text-blue-600 rounded-r-xl">
+                <td className="px-4 font-semibold text-blue-600">
                   {room.total_reservas}
                 </td>
               </tr>
@@ -218,7 +270,7 @@ export default function ReportsPage() {
 
       <div className="flex gap-3">
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/api/relatorios/mensal?mes=${month}&ano=${year}&formato=pdf`}
+          href={buildExportUrl("pdf")}
           target="_blank"
           className="bg-linear-to-r from-red-500 to-pink-500 text-white px-5 py-2 rounded-xl shadow hover:shadow-xl hover:scale-105 active:scale-95 transition"
         >
@@ -226,7 +278,7 @@ export default function ReportsPage() {
         </a>
 
         <a
-          href={`${process.env.NEXT_PUBLIC_API_URL}/api/relatorios/mensal?mes=${month}&ano=${year}&formato=csv`}
+          href={buildExportUrl("csv")}
           target="_blank"
           className="bg-linear-to-r from-green-500 to-emerald-500 text-white px-5 py-2 rounded-xl shadow hover:shadow-xl hover:scale-105 active:scale-95 transition"
         >
@@ -236,7 +288,6 @@ export default function ReportsPage() {
     </div>
   );
 }
-
 
 function AnimatedItem({ children }: any) {
   return (
@@ -253,10 +304,7 @@ function AnimatedItem({ children }: any) {
 
 function FancyCard({ title, value, gradient }: any) {
   return (
-    <div className={`group relative overflow-hidden bg-linear-to-r ${gradient} text-white p-6 rounded-2xl shadow-lg`}>
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition bg-white/10" />
-      <div className="absolute -top-10 -left-10 w-40 h-40 bg-white/20 blur-3xl group-hover:translate-x-10 transition" />
-
+    <div className={`bg-linear-to-r ${gradient} text-white p-6 rounded-2xl shadow-lg`}>
       <p className="text-sm opacity-80">{title}</p>
       <h2 className="text-4xl font-bold mt-1">{value}</h2>
     </div>
@@ -267,7 +315,7 @@ function ChartCard({ title, data, children }: any) {
   const isEmpty = !data || data.length === 0;
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800 backdrop-blur-md p-5 rounded-2xl shadow border">
+    <div className="bg-white/80 dark:bg-gray-800 p-5 rounded-2xl shadow border">
       <h3 className="mb-4 font-semibold text-gray-700 dark:text-white">
         {title}
       </h3>

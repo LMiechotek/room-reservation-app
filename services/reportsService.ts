@@ -10,6 +10,10 @@ export async function getReport(
     endDate?: string;
     month?: number;
     year?: number;
+
+    data_inicio?: string;
+    data_fim?: string;
+
     semester?: number;
   }
 ) {
@@ -40,6 +44,7 @@ export async function getReport(
 
   if (!response.ok) {
     const error = await response.text();
+    console.error("Erro backend:", error);
     throw new Error("Erro ao buscar relatório");
   }
 
