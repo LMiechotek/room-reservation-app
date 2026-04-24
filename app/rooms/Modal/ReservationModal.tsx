@@ -41,6 +41,9 @@ export default function ReservationModal({
   const { user } = useAuth();
   const today = new Date().toLocaleDateString("en-CA");
 
+  const now = new Date();
+  const isToday = (date: string) => date === today;
+
   const [users, setUsers] = useState<UserType[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [subject, setSubject] = useState("");
@@ -156,15 +159,36 @@ export default function ReservationModal({
 
   const currentSlots = schedules[shift]
     ? Object.entries(schedules[shift]).map(([num, info]) => ({
-        numero: Number(num),
-        horario: `${info.hora_inicio}-${info.hora_fim}`,
-      }))
+      numero: Number(num),
+      horario: `${info.hora_inicio}-${info.hora_fim}`,
+      fim: info.hora_fim,
+    }))
     : [];
 
+  const isPastLesson = (lessonNumber: number) => {
+    if (!isToday(date)) return false;
+
+    const slot = currentSlots.find((s) => s.numero === lessonNumber);
+    if (!slot) return false;
+
+    const [h, m] = slot.fim.split(":").map(Number);
+
+    const end = new Date();
+    end.setHours(h, m, 0, 0);
+
+    return end < now;
+  };
+
+  const isBlocked = (num: number) =>
+    takenSlots.includes(num) || isPastLesson(num);
+
   const toggleLesson = (numero: number) => {
-    if (takenSlots.includes(numero)) return;
+    if (isBlocked(numero)) return;
+
     setSelectedLessons((prev) =>
-      prev.includes(numero) ? prev.filter((n) => n !== numero) : [...prev, numero]
+      prev.includes(numero)
+        ? prev.filter((n) => n !== numero)
+        : [...prev, numero]
     );
   };
 
@@ -198,7 +222,6 @@ export default function ReservationModal({
       return;
     }
 
-
     if (selectedLessons.length === 0) {
       toast.warning("Selecione pelo menos um horário.");
       return;
@@ -216,20 +239,17 @@ export default function ReservationModal({
           usuario_id: isAdmin ? selectedUserId : user.id,
           criado_por: user.id,
           data: date,
-          turno:shift,
+          turno: shift,
           aula_numero: aulaNumero,
           disciplina: subject,
         };
 
-        const response = await fetch(
-          "/api/reservations",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload),
-          }
-        );
+        const response = await fetch("/api/reservations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
 
         const result = await response.json();
 
@@ -248,8 +268,6 @@ export default function ReservationModal({
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50 p-4">
@@ -382,6 +400,8 @@ export default function ReservationModal({
                 {currentSlots.map((slot) => {
                   const isSelected = selectedLessons.includes(slot.numero);
                   const isTaken = takenSlots.includes(slot.numero);
+                  const isPast = isPastLesson(slot.numero); 
+                  const blocked = isTaken || isPast; 
                   return (
                     <div
                       key={slot.numero}
@@ -389,14 +409,20 @@ export default function ReservationModal({
                       className={`flex items-center justify-between px-4 py-2 text-sm transition-colors
                         ${isTaken
                           ? "bg-gray-50 text-gray-400 cursor-not-allowed"
-                          : isSelected
-                          ? "bg-blue-50 text-blue-700 font-medium cursor-pointer hover:bg-blue-100"
-                          : "text-gray-700 cursor-pointer hover:bg-blue-50"
-                        }`}
+                          : isPast
+                            ? "bg-red-50 text-red-400 cursor-not-allowed"
+                            : isSelected
+                              ? "bg-blue-50 text-blue-700 font-medium cursor-pointer hover:bg-blue-100"
+                              : "text-gray-700 cursor-pointer hover:bg-blue-50"
+                        }
+                        `}
                     >
                       <span>{slot.horario}</span>
+                      {!isTaken && isPast && (
+                        <span className="text-xs text-red-400 font-medium">Expirado</span>
+                      )}
                       {isTaken && (
-                        <span className="text-xs text-red-400 font-medium">Ocupado</span>
+                        <span>Ocupado</span>
                       )}
                       {isSelected && !isTaken && (
                         <span className="text-blue-600 font-bold text-base leading-none">✓</span>
