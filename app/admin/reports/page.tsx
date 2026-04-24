@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getReport } from "@/services/reportsService";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer} from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { motion } from "framer-motion";
 
 export default function ReportsPage() {
@@ -123,19 +123,19 @@ export default function ReportsPage() {
   const rawPerDay =
     period === "daily"
       ? [
-          {
-            data: getLocalDateISO(),
-            total_reservas: data?.resumo?.total_reservas ?? 0,
-            canceladas: data?.resumo?.canceladas ?? 0,
-          },
-        ]
+        {
+          data: getLocalDateISO(),
+          total_reservas: data?.resumo?.total_reservas ?? 0,
+          canceladas: data?.resumo?.canceladas ?? 0,
+        },
+      ]
       : period === "semester"
-      ? (data?.por_mes ?? []).map((m: any) => ({
+        ? (data?.por_mes ?? []).map((m: any) => ({
           data: m?.nome_mes ?? "",
           total_reservas: m?.total_reservas ?? 0,
           canceladas: m?.canceladas ?? 0,
         }))
-      : data?.por_dia ?? [];
+        : data?.por_dia ?? [];
 
   const perDay =
     period === "semester"
@@ -145,20 +145,20 @@ export default function ReportsPage() {
   const perRoom =
     period === "daily"
       ? Object.values(
-          (data?.reservas ?? []).reduce((acc: any, r: any) => {
-            if (!acc[r.sala_id]) {
-              acc[r.sala_id] = {
-                sala_id: r.sala_id,
-                nome_numero: r.nome_numero,
-                bloco: r.bloco,
-                total_reservas: 0,
-              };
-            }
+        (data?.reservas ?? []).reduce((acc: any, r: any) => {
+          if (!acc[r.sala_id]) {
+            acc[r.sala_id] = {
+              sala_id: r.sala_id,
+              nome_numero: r.nome_numero,
+              bloco: r.bloco,
+              total_reservas: 0,
+            };
+          }
 
-            acc[r.sala_id].total_reservas++;
-            return acc;
-          }, {})
-        ).sort((a: any, b: any) => b.total_reservas - a.total_reservas)
+          acc[r.sala_id].total_reservas++;
+          return acc;
+        }, {})
+      ).sort((a: any, b: any) => b.total_reservas - a.total_reservas)
       : data?.por_sala ?? [];
 
   function normalizeAndSortByDate(data: any[]) {
@@ -167,7 +167,7 @@ export default function ReportsPage() {
     return [...data]
       .map((item) => ({
         ...item,
-        _date: new Date(item.data.split("T")[0]), 
+        _date: new Date(item.data.split("T")[0]),
       }))
       .sort((a, b) => a._date.getTime() - b._date.getTime())
       .map(({ _date, ...rest }) => rest);
@@ -181,7 +181,7 @@ export default function ReportsPage() {
       return `${dia}/${mes}`;
     }
 
-    return valor; 
+    return valor;
   }
 
   return (
@@ -277,7 +277,14 @@ export default function ReportsPage() {
 
         <ChartCard title="Evolução" data={perDay}>
           <LineChart data={perDay}>
-            <XAxis dataKey="data" tickFormatter={formatDate} />
+            <XAxis
+              dataKey="data"
+              tickFormatter={formatDate}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={60}
+            />
             <YAxis />
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
 
@@ -359,6 +366,8 @@ function FancyCard({ title, value, gradient }: any) {
 function ChartCard({ title, data, children }: any) {
   const isEmpty = !data || data.length === 0;
 
+  const chartWidth = Math.max(600, data.length * 60);
+
   return (
     <div className="bg-white/80 p-5 rounded-2xl shadow border">
       <h3 className="mb-4 font-semibold text-gray-700">
@@ -370,9 +379,13 @@ function ChartCard({ title, data, children }: any) {
           Nenhum dado disponível nesse período
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={280}>
-          {children}
-        </ResponsiveContainer>
+        <div className="w-full overflow-x-auto">
+          <div style={{ width: chartWidth }}>
+            <ResponsiveContainer width="100%" height={280}>
+              {children}
+            </ResponsiveContainer>
+          </div>
+        </div>
       )}
     </div>
   );
