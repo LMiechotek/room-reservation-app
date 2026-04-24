@@ -400,16 +400,16 @@ export default function ReservationModal({
                 {currentSlots.map((slot) => {
                   const isSelected = selectedLessons.includes(slot.numero);
                   const isTaken = takenSlots.includes(slot.numero);
-                  const isPast = isPastLesson(slot.numero); 
-                  const blocked = isTaken || isPast; 
+                  const isExpired = isPastLesson(slot.numero); 
+                  const blocked = isTaken || isExpired; 
                   return (
                     <div
                       key={slot.numero}
                       onClick={() => !isTaken && toggleLesson(slot.numero)}
                       className={`flex items-center justify-between px-4 py-2 text-sm transition-colors
-                        ${isTaken
+                        ${isExpired
                           ? "bg-gray-50 text-gray-400 cursor-not-allowed"
-                          : isPast
+                          : isTaken
                             ? "bg-red-50 text-red-400 cursor-not-allowed"
                             : isSelected
                               ? "bg-blue-50 text-blue-700 font-medium cursor-pointer hover:bg-blue-100"
@@ -418,7 +418,7 @@ export default function ReservationModal({
                         `}
                     >
                       <span>{slot.horario}</span>
-                      {!isTaken && isPast && (
+                      {!isTaken && isExpired && (
                         <span className="text-xs text-red-400 font-medium">Expirado</span>
                       )}
                       {isTaken && (
