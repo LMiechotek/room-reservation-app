@@ -27,22 +27,20 @@ type RoomFilter = "todos" | "sala_aula" | "laboratorio";
 
 export default function Rooms() {
   const today = new Date().toISOString().slice(0, 10);
+
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allRooms, setAllRooms] = useState<Room[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [horarios, setHorarios] = useState<any>(null);
+
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [search, setSearch] = useState("");
   const [date, setDate] = useState(today);
-  const [time] = useState("");
+  const [time] = useState(""); 
   const [roomFilter, setRoomFilter] = useState<RoomFilter>("todos");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -69,15 +67,68 @@ export default function Rooms() {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    const fetchHorarios = async () => {
+      try {
+        const res = await fetch("/api/reservations/schedules");
+        const data = await res.json();
+        setHorarios(data);
+      } catch {
+        toast.error("Erro ao carregar horários.");
+      }
+    };
+
+    fetchHorarios();
+  }, []);
+
+  const generateSlots = () => {
+    if (!horarios) return [];
+
+    const slots: any[] = [];
+
+    Object.entries(horarios).forEach(([turno, aulas]: any) => {
+      Object.entries(aulas).forEach(([numero, horario]: any) => {
+        slots.push({
+          key: `${turno}-${numero}`,
+          start: horario.hora_inicio.slice(0, 5),
+          end: horario.hora_fim.slice(0, 5),
+        });
+      });
+    });
+
+    return slots;
+  };
+
+  // 🔧 reserva → slots
+  const getReservationSlots = (reservation: Reservation, slots: any[]) => {
+    const start = reservation.hora_inicio.slice(0, 5);
+    const end = reservation.hora_fim.slice(0, 5);
+
+    return slots
+      .filter((slot) => slot.start >= start && slot.end <= end)
+      .map((slot) => slot.key);
+  };
+
+  const getValidSlots = (slots: any[], selectedDate: string) => {
+    const now = new Date();
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    return slots.filter((slot) => {
+      if (selectedDate !== todayStr) return true;
+
+      const [h, m] = slot.start.split(":").map(Number);
+      const slotDate = new Date();
+      slotDate.setHours(h, m, 0, 0);
+
+      return slotDate > now;
+    });
+  };
+
   const fetchRoomsData = async () => {
     try {
       const [roomsResponse, reservationsResponse] = await Promise.all([
-        fetch("/api/rooms", {
-          credentials: "include",
-        }),
-        fetch("/api/reservations", {
-          credentials: "include",
-        }),
+        fetch("/api/rooms", { credentials: "include" }),
+        fetch("/api/reservations", { credentials: "include" }),
       ]);
 
       const roomsData = await roomsResponse.json();
@@ -85,22 +136,34 @@ export default function Rooms() {
 
       setReservations(reservationsData);
 
+      const slots = generateSlots();
+
       const formattedRooms: Room[] = roomsData
         .filter((room: any) => room.ativo === true)
         .map((room: any) => {
-          const hasActiveReservation = reservationsData.some(
-            (reservation: Reservation) =>
-              reservation.sala_id === room.id &&
-              reservation.status === "ativa" &&
-              reservation.data.slice(0, 10) === today
+          const reservasDaSala = reservationsData.filter(
+            (r: Reservation) =>
+              r.sala_id === room.id &&
+              r.status === "ativa" &&
+              r.data.slice(0, 10) === date
           );
+
+          const occupiedSlots = reservasDaSala.flatMap((r: Reservation) =>
+            getReservationSlots(r, slots)
+          );
+
+          const validSlots = getValidSlots(slots, date);
+
+          const isFullyBooked =
+            validSlots.length > 0 &&
+            validSlots.every((slot) => occupiedSlots.includes(slot.key));
 
           return {
             id: room.id,
             name: `${room.nome_numero} - ${room.bloco}`,
             capacity: room.capacidade,
             roomType: room.tipo_sala,
-            status: hasActiveReservation ? "reservada" : "disponivel",
+            status: isFullyBooked ? "reservada" : "disponivel",
           };
         });
 
@@ -113,8 +176,10 @@ export default function Rooms() {
   };
 
   useEffect(() => {
-    fetchRoomsData();
-  }, []);
+    if (horarios) {
+      fetchRoomsData();
+    }
+  }, [horarios, date]);
 
   const handleReserve = (roomId: string) => {
     if (!isLoggedIn) {
@@ -131,22 +196,23 @@ export default function Rooms() {
       .map((room) => {
         const roomReservations = reservations.filter(
           (reservation) =>
-            reservation.sala_id === room.id && reservation.status === "ativa"
+            reservation.sala_id === room.id &&
+            reservation.status === "ativa" &&
+            reservation.data.slice(0, 10) === searchDate
         );
 
         const hasConflict = roomReservations.some((reservation) => {
-          const sameDate = reservation.data.slice(0, 10) === searchDate;
-          const sameTime = time
-            ? time >= reservation.hora_inicio.slice(0, 5) &&
-            time <= reservation.hora_fim.slice(0, 5)
-            : true;
+          if (!time) return false;
 
-          return sameDate && sameTime;
+          return (
+            time >= reservation.hora_inicio.slice(0, 5) &&
+            time <= reservation.hora_fim.slice(0, 5)
+          );
         });
 
         return {
           ...room,
-          status: (hasConflict ? "reservada" : "disponivel") as Room["status"],
+          status: (hasConflict ? "reservada" : room.status) as Room["status"],
         };
       })
       .filter((room) =>
@@ -166,7 +232,6 @@ export default function Rooms() {
   const filteredRooms = rooms.filter((room) =>
     roomFilter === "todos" ? true : room.roomType === roomFilter
   );
-
   return (
     <>
 
@@ -221,8 +286,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("todos")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "todos"
-                  ? "bg-white text-blue-700 shadow-md scale-105"
-                  : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-700 shadow-md scale-105"
+                    : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <LayoutGrid size={16} />
@@ -232,8 +297,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("sala_aula")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "sala_aula"
-                  ? "bg-white text-blue-700 shadow-md scale-105"
-                  : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-700 shadow-md scale-105"
+                    : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <GraduationCap size={16} />
@@ -243,8 +308,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("laboratorio")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "laboratorio"
-                  ? "bg-white text-blue-700 shadow-md scale-105"
-                  : "text-gray-600 hover:text-gray-800"
+                    ? "bg-white text-blue-700 shadow-md scale-105"
+                    : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <Laptop size={16} />
