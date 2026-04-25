@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { message: "Body inválido ou vazio" },
+        { status: 400 }
+      );
+    }
 
     const backendResponse = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`,
@@ -15,7 +24,24 @@ export async function POST(request: NextRequest) {
       }
     );
 
-    const data = await backendResponse.json();
+    const raw = await backendResponse.text();
+
+    if (!raw) {
+      return NextResponse.json(
+        { message: "Backend retornou resposta vazia" },
+        { status: 502 }
+      );
+    }
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      return NextResponse.json(
+        { message: "Resposta inválida do backend" },
+        { status: 502 }
+      );
+    }
 
     if (!backendResponse.ok) {
       return NextResponse.json(
@@ -27,7 +53,7 @@ export async function POST(request: NextRequest) {
     if (!data?.token) {
       return NextResponse.json(
         { message: "Token não retornado pelo backend" },
-        { status: 500 }
+        { status: 401 }
       );
     }
 
@@ -42,6 +68,7 @@ export async function POST(request: NextRequest) {
     });
 
     return response;
+
   } catch (error) {
     console.error("Erro route login:", error);
 

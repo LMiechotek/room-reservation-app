@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (res.status === 401) {
           setUser(null);
-          setLoading(false); // 👈 importante
+          setLoading(false); 
           return;
         }
 
@@ -52,8 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  function login(userData: User) {
-    setUser(userData);
+  async function login() {
+    setLoading(true);
+    
+    const res = await fetch("/api/auth/user", {
+      credentials: "include",
+    });
+
+    const data = await res.json();
+
+    setUser(data);
+    setLoading(false);
   }
 
   async function logout() {

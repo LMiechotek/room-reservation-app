@@ -21,11 +21,31 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const data = await res.json();
+    const raw = await res.text();
+
+    let data;
+    try {
+      data = raw ? JSON.parse(raw) : null;
+    } catch {
+      console.error("Resposta inválida do backend /user:", raw);
+
+      return NextResponse.json(
+        { message: "Resposta inválida do backend" },
+        { status: 502 }
+      );
+    }
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { message: data?.message || "Erro ao buscar usuário" },
+        { status: res.status }
+      );
+    }
 
     return NextResponse.json(data, {
-      status: res.status,
+      status: 200,
     });
+
   } catch (error) {
     console.error("Erro auth/user:", error);
 
