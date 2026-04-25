@@ -38,7 +38,7 @@ export default function Rooms() {
   const [date, setDate] = useState(today);
   const [time] = useState("");
   const [roomFilter, setRoomFilter] = useState<RoomFilter>("todos");
-  const [mounted, setMounted] = useState(false); 
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -87,22 +87,24 @@ export default function Rooms() {
 
       setReservations(reservationsData);
 
-      const formattedRooms: Room[] = roomsData.map((room: any) => {
-        const hasActiveReservation = reservationsData.some(
-          (reservation: Reservation) =>
-            reservation.sala_id === room.id &&
-            reservation.status === "ativa" &&
-            reservation.data.slice(0, 10) === today
-        );
+      const formattedRooms: Room[] = roomsData
+        .filter((room: any) => room.ativo === true)
+        .map((room: any) => {
+          const hasActiveReservation = reservationsData.some(
+            (reservation: Reservation) =>
+              reservation.sala_id === room.id &&
+              reservation.status === "ativa" &&
+              reservation.data.slice(0, 10) === today
+          );
 
-        return {
-          id: room.id,
-          name: `${room.nome_numero} - ${room.bloco}`,
-          capacity: room.capacidade,
-          roomType: room.tipo_sala,
-          status: hasActiveReservation ? "reservada" : "disponivel",
-        };
-      });
+          return {
+            id: room.id,
+            name: `${room.nome_numero} - ${room.bloco}`,
+            capacity: room.capacidade,
+            roomType: room.tipo_sala,
+            status: hasActiveReservation ? "reservada" : "disponivel",
+          };
+        });
 
       setRooms(formattedRooms);
       setAllRooms(formattedRooms);
@@ -138,7 +140,7 @@ export default function Rooms() {
           const sameDate = reservation.data.slice(0, 10) === searchDate;
           const sameTime = time
             ? time >= reservation.hora_inicio.slice(0, 5) &&
-              time <= reservation.hora_fim.slice(0, 5)
+            time <= reservation.hora_fim.slice(0, 5)
             : true;
 
           return sameDate && sameTime;
@@ -220,11 +222,10 @@ export default function Rooms() {
             <div className="inline-flex bg-gray-100 p-1.5 rounded-2xl shadow-inner border border-gray-200">
               <button
                 onClick={() => setRoomFilter("todos")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  roomFilter === "todos"
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "todos"
                     ? "bg-white text-blue-700 shadow-md scale-105"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 <LayoutGrid size={16} />
                 Todos
@@ -232,11 +233,10 @@ export default function Rooms() {
 
               <button
                 onClick={() => setRoomFilter("sala_aula")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  roomFilter === "sala_aula"
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "sala_aula"
                     ? "bg-white text-blue-700 shadow-md scale-105"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 <GraduationCap size={16} />
                 Sala de Aula
@@ -244,11 +244,10 @@ export default function Rooms() {
 
               <button
                 onClick={() => setRoomFilter("laboratorio")}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-                  roomFilter === "laboratorio"
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "laboratorio"
                     ? "bg-white text-blue-700 shadow-md scale-105"
                     : "text-gray-600 hover:text-gray-800"
-                }`}
+                  }`}
               >
                 <Laptop size={16} />
                 Laboratório
@@ -266,7 +265,7 @@ export default function Rooms() {
                 roomType={room.roomType}
                 status={room.status}
                 onReserve={handleReserve}
-                isLoggedIn={isLoggedIn} 
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </div>
