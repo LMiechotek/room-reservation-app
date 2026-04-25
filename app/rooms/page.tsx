@@ -47,24 +47,22 @@ export default function Rooms() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(
-          "/api/auth/user",
-          { credentials: "include" }
-        );
+        const response = await fetch("/api/auth/user", {
+          credentials: "include",
+        });
 
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(data.tipo === "admin_cpd");
-          setIsLoggedIn(true);
-        } else {
-          setIsAdmin(false);
+        if (!response.ok) {
           setIsLoggedIn(false);
-          toast.warning("Você não está logado.");
+          setIsAdmin(false);
+          return;
         }
-      } catch (error) {
-        toast.error("Erro ao carregar informações do usuário.");
-        setIsAdmin(false);
+
+        const data = await response.json();
+        setIsAdmin(data.tipo === "admin_cpd");
+        setIsLoggedIn(true);
+      } catch {
         setIsLoggedIn(false);
+        setIsAdmin(false);
       }
     };
 
@@ -223,8 +221,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("todos")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "todos"
-                    ? "bg-white text-blue-700 shadow-md scale-105"
-                    : "text-gray-600 hover:text-gray-800"
+                  ? "bg-white text-blue-700 shadow-md scale-105"
+                  : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <LayoutGrid size={16} />
@@ -234,8 +232,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("sala_aula")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "sala_aula"
-                    ? "bg-white text-blue-700 shadow-md scale-105"
-                    : "text-gray-600 hover:text-gray-800"
+                  ? "bg-white text-blue-700 shadow-md scale-105"
+                  : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <GraduationCap size={16} />
@@ -245,8 +243,8 @@ export default function Rooms() {
               <button
                 onClick={() => setRoomFilter("laboratorio")}
                 className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${roomFilter === "laboratorio"
-                    ? "bg-white text-blue-700 shadow-md scale-105"
-                    : "text-gray-600 hover:text-gray-800"
+                  ? "bg-white text-blue-700 shadow-md scale-105"
+                  : "text-gray-600 hover:text-gray-800"
                   }`}
               >
                 <Laptop size={16} />
