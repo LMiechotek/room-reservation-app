@@ -32,14 +32,21 @@ export async function POST(request: NextRequest) {
         { status: 502 }
       );
     }
-
     let data;
+
     try {
       data = JSON.parse(raw);
     } catch {
       return NextResponse.json(
         { message: "Resposta inválida do backend" },
         { status: 502 }
+      );
+    }
+
+    if (data?.usuario && data.usuario.ativo === false) {
+      return NextResponse.json(
+        { message: "Usuário desativado" },
+        { status: 401 }
       );
     }
 
