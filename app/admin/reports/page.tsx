@@ -11,10 +11,11 @@ export default function ReportsPage() {
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [semester, setSemester] = useState(1);
+  const [selectedDate, setSelectedDate] = useState(getLocalDateISO());
 
   useEffect(() => {
     loadData();
-  }, [period, month, year, semester]);
+  }, [period, month, year, semester, selectedDate]);
 
   function getLocalDateISO() {
     const d = new Date();
@@ -55,7 +56,7 @@ export default function ReportsPage() {
 
       switch (period) {
         case "daily":
-          res = await getReport("daily", { date: today });
+          res = await getReport("daily", { date: selectedDate });
           break;
 
         case "weekly":
@@ -88,8 +89,7 @@ export default function ReportsPage() {
     const base = `${process.env.NEXT_PUBLIC_API_URL}/api/relatorios`;
 
     if (period === "daily") {
-      const today = getLocalDateISO();
-      return `${base}/diario?data=${today}&formato=${format}`;
+      return `${base}/diario?data=${selectedDate}&formato=${format}`;
     }
 
     if (period === "weekly") {
@@ -215,6 +215,14 @@ export default function ReportsPage() {
           <option value="monthly">Mensal</option>
           <option value="semester">Semestral</option>
         </select>
+        {period === "daily" && (
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-white border border-gray-300 px-4 py-2 rounded-xl shadow-sm"
+          />
+        )}
 
         {period === "monthly" && (
           <motion.div
