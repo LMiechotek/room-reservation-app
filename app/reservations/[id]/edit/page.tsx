@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Save, BookOpen, CalendarDays, Clock3, Building2, ChevronDown, X, Check,} from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  BookOpen,
+  CalendarDays,
+  Clock3,
+  Building2,
+  ChevronDown,
+  X,
+  Check,
+} from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
@@ -24,7 +34,8 @@ type ExistingReservation = {
   sala_id: string;
   data: string;
   turno: string;
-  aula_numero: number;
+  aula_numeros: number[];
+  aula_numero: number
   status: string;
   id: string;
 };
@@ -97,7 +108,11 @@ export default function EditReservationPage() {
         setSubject(reservation.disciplina || "");
         setDate(reservation.data.slice(0, 10));
         setShift(reservation.turno);
-        setSelectedLessons([reservation.aula_numero]);
+
+        setSelectedLessons(
+          reservation.aula_numeros ??
+          (reservation.aula_numero ? [reservation.aula_numero] : [])
+        );
 
         setRooms(roomsData);
         setSchedules(schedulesData);
@@ -137,7 +152,17 @@ export default function EditReservationPage() {
                 reservation.status === "aberta") &&
               reservation.id !== reservationId
           )
-          .map((reservation) => reservation.aula_numero);
+          .flatMap((reservation) => {
+            if (Array.isArray(reservation.aula_numeros)) {
+              return reservation.aula_numeros;
+            }
+
+            if (typeof reservation.aula_numero === "number") {
+              return [reservation.aula_numero];
+            }
+
+            return [];
+          });
 
         setTakenSlots(taken);
       } catch (error) {
@@ -180,7 +205,6 @@ export default function EditReservationPage() {
 
   const toggleLesson = (lessonNumber: number) => {
     const isOccupied = takenSlots.includes(lessonNumber);
-
     if (isOccupied) return;
 
     setSelectedLessons((prev) =>
@@ -191,8 +215,13 @@ export default function EditReservationPage() {
   };
 
   const handleSubmit = async () => {
-    if (!roomId || !subject.trim() || !date || selectedLessons.length === 0) {
+    if (!roomId || !subject.trim() || !date) {
       toast.warning("Preencha todos os campos.");
+      return;
+    }
+
+    if (selectedLessons.length === 0) {
+      toast.warning("Selecione pelo menos um horário.");
       return;
     }
 
@@ -205,54 +234,41 @@ export default function EditReservationPage() {
       setLoading(true);
 
       const sortedLessons = [...selectedLessons].sort((a, b) => a - b);
-      const [mainLesson, ...extraLessons] = sortedLessons;
 
-      const updateResponse = await fetch(
-        `/api/reservations/${reservationId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            sala_id: roomId,
-            data: date,
-            turno: shift,
-            aula_numero: mainLesson,
-            disciplina: subject,
-          }),
-        }
-      );
+      console.log("PAYLOAD PUT:", {
+        sala_id: roomId,
+        data: date,
+        turno: shift,
+        aula_numeros: sortedLessons,
+        disciplina: subject,
+      });
+
+      const updateResponse = await fetch(`/api/reservations/${reservationId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          sala_id: roomId,
+          data: date,
+          turno: shift,
+          aula_numeros: sortedLessons,
+          disciplina: subject,
+        }),
+      });
 
       const updateResult = await updateResponse.json();
 
       if (!updateResponse.ok) {
+        console.error("BACKEND ERROR:", updateResult);
         toast.error(updateResult?.message || "Erro ao atualizar reserva.");
         return;
       }
 
-      await Promise.all(
-        extraLessons.map((lesson) =>
-          fetch(`/api/reservations`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              sala_id: roomId,
-              data: date,
-              turno: shift,
-              aula_numero: lesson,
-              disciplina: subject,
-            }),
-          })
-        )
-      );
-
-      toast.success("Reserva atualizada com horários extras!");
+      toast.success("Reserva atualizada com sucesso!");
       router.push("/reservations");
+
     } catch (error) {
       console.error(error);
       toast.error("Erro inesperado ao salvar.");
@@ -261,13 +277,10 @@ export default function EditReservationPage() {
     }
   };
 
-  if (fetching) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-r from-blue-800 via-teal-400 to-teal-500">
-        <p className="text-white text-lg font-medium">Carregando...</p>
-      </div>
-    );
-  }
+  const isExpiredDate = () => {
+    const today = new Date().toISOString().split("T")[0];
+    return date < today;
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-r from-blue-800 via-teal-400 to-teal-500 pt-24 px-4 sm:px-6">
@@ -410,9 +423,8 @@ export default function EditReservationPage() {
 
                 <ChevronDown
                   size={18}
-                  className={`ml-auto transition-transform ${
-                    dropdownOpen ? "rotate-180" : ""
-                  }`}
+                  className={`ml-auto transition-transform ${dropdownOpen ? "rotate-180" : ""
+                    }`}
                 />
               </div>
 
@@ -420,31 +432,41 @@ export default function EditReservationPage() {
                 <div className="mt-2 border rounded-2xl shadow-xl bg-white overflow-hidden">
                   {currentSlots.map((slot) => {
                     const isTaken = takenSlots.includes(slot.number);
+                    const isExpired = isExpiredDate();
                     const isSelected = selectedLessons.includes(slot.number);
+
+                    const blocked = isTaken || isExpired;
 
                     return (
                       <button
                         key={slot.number}
                         type="button"
-                        disabled={isTaken}
-                        onClick={() => toggleLesson(slot.number)}
+                        disabled={blocked}
+                        onClick={() => !blocked && toggleLesson(slot.number)}
+
                         className={`w-full px-4 py-3 flex items-center justify-between text-left transition
-                          ${
-                            isTaken
-                              ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+                            ${isExpired
+                            ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+                            : isTaken
+                              ? "bg-red-50 text-red-400 cursor-not-allowed"
                               : isSelected
-                              ? "bg-blue-50 text-blue-700"
-                              : "hover:bg-blue-50"
-                          }`}
+                                ? "bg-blue-50 text-blue-700"
+                                : "hover:bg-blue-50"
+                          }
+`}
                       >
                         <span>{slot.time}</span>
+                        {isExpired && (
+                          <span className="text-xs font-medium text-gray-400">
+                            Expirado
+                          </span>
+                        )}
 
-                        {isTaken && (
+                        {!isExpired && isTaken && (
                           <span className="text-xs font-medium text-red-400">
                             Ocupado
                           </span>
                         )}
-
                         {isSelected && !isTaken && <Check size={16} />}
                       </button>
                     );

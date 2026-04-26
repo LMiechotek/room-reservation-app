@@ -35,21 +35,28 @@ export default function LoginPage() {
     try {
       setLoading(true);
 
-      const response = await fetch(
-        "/api/auth/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: email, senha: password }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha: password }),
+        credentials: "include",
+      });
 
-      if (!response.ok) {
-        toast.error("Email ou senha inválidos");
+      const raw = await response.text();
+
+      let data;
+
+      try {
+        data = raw ? JSON.parse(raw) : null;
+      } catch {
+        toast.error("Resposta inválida do servidor");
+        return;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data?.message || "Email ou senha inválidos");
+        return; 
+      }
 
       authLogin({ id: data.usuario.id, tipo: data.usuario.tipo });
 

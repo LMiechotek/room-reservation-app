@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import {User, BookOpen, CalendarDays, Clock3, X, Edit, List, Plus, Save, ChevronDown,} from "lucide-react";
+import { User, BookOpen, CalendarDays, Clock3, X, Edit, List, Plus, Save, ChevronDown, } from "lucide-react";
 import { toast } from "react-toastify";
 import Image from "next/image";
 import "react-toastify/dist/ReactToastify.css";
@@ -311,6 +311,20 @@ export default function AdminReservationPanel() {
   const selectInputClass =
     "w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 text-gray-700 shadow-sm outline-none transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 hover:border-blue-400";
 
+  const isSlotExpired = (horaFim: string) => {
+    if (!date) return false;
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (date !== todayStr) return false;
+
+    const now = new Date();
+    const [h, m] = horaFim.split(":").map(Number);
+
+    const slotTime = new Date();
+    slotTime.setHours(h, m, 0, 0);
+
+    return now > slotTime;
+  };
   return (
     <>
       <ConfirmModal
@@ -535,13 +549,14 @@ export default function AdminReservationPanel() {
                         const numero = Number(num);
                         const isSelected = selectedLessons.includes(numero);
                         const isTaken = takenSlots.includes(numero);
+                        const isExpired = isSlotExpired(info.hora_fim);
                         const label = `${info.hora_inicio}-${info.hora_fim}`;
 
                         return (
                           <div
                             key={num}
                             onClick={() => {
-                              if (isTaken) return;
+                              if (isTaken || isExpired) return;
 
                               setSelectedLessons((prev) =>
                                 prev.includes(numero)
@@ -550,8 +565,10 @@ export default function AdminReservationPanel() {
                               );
                             }}
                             className={`flex items-center justify-between px-4 py-2 text-sm transition-colors
-              ${isTaken
+                              ${isExpired 
                                 ? "bg-gray-50 text-gray-400 cursor-not-allowed"
+                                :isTaken 
+                                  ? "bg-red-50 text-red-400 cursor-not-allowed"
                                 : isSelected
                                   ? "bg-blue-50 text-blue-700 font-medium cursor-pointer hover:bg-blue-100"
                                   : "text-gray-700 cursor-pointer hover:bg-blue-50"
@@ -562,6 +579,11 @@ export default function AdminReservationPanel() {
                             {isTaken && (
                               <span className="text-xs text-red-400 font-medium">
                                 Ocupado
+                              </span>
+                            )}
+                            {isExpired && !isTaken && (
+                              <span className="text-xs text-gray-400 font-medium">
+                                Expirado
                               </span>
                             )}
 
