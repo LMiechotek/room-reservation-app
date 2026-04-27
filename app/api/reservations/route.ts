@@ -3,23 +3,27 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
 
+  const { search } = new URL(request.url);
+
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/reservas`,
+    `${process.env.NEXT_PUBLIC_API_URL}/api/reservas${search}`,
     {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
+      headers: token
+        ? { Authorization: `Bearer ${token}` }
+        : {},
+
+        cache: "no-store",
+    },
   );
+  console.log("SEARCH:", search);
+  console.log("URL FINAL:", `${process.env.NEXT_PUBLIC_API_URL}/api/reservas${search}`);
 
-  const data = await response.json();
+const data = await response.json();
 
-  return NextResponse.json(data, {
-    status: response.status,
-  });
+return NextResponse.json(data, {
+  status: response.status,
+});
 }
-
 export async function POST(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const body = await request.json();
