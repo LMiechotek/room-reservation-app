@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  Users,
-  Monitor,
-  Building2,
-  Pencil,
-  Trash2,
-  ArrowLeft,
-} from "lucide-react";
+import { Users, Monitor, Building2, Pencil, Trash2, ArrowLeft, } from "lucide-react";
 import { toast } from "react-toastify";
 import ConfirmModal from "@/app/components/ui/ConfirmModal";
 
@@ -34,11 +27,22 @@ export default function RoomDetailsPage() {
   const params = useParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
 
+  function getLocalDateISO() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  }
+
   const router = useRouter();
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [reservas, setReservas] = useState<any[]>([]);
+  const [selectedDate, setSelectedDate] = useState(getLocalDateISO());
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -85,8 +89,34 @@ export default function RoomDetailsPage() {
       }
     };
 
+    const fetchReservas = async () => {
+      try {
+        const res = await fetch(
+          `/api/reservations?sala_id=${id}&data=${selectedDate}`
+        );
+
+        if (res.status === 404) {
+          setReservas([]);
+          return;
+        }
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error(errorText);
+          throw new Error("Erro ao buscar reservas");
+        }
+
+        const data = await res.json();
+        setReservas(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchReservas();
+
     fetchRoom();
-  }, [id]);
+  }, [id, selectedDate]);
 
   const handleDelete = async () => {
     const toastId = toast.loading("Excluindo sala...");
@@ -254,6 +284,50 @@ export default function RoomDetailsPage() {
                   Nenhum equipamento cadastrado.
                 </p>
               )}
+            </div>
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold text-gray-800 mb-5">
+                Agenda da Sala
+              </h2>
+
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="border px-4 py-2 rounded-xl shadow-sm border-gray-300 mb-6"
+              />
+              <div className="space-y-3">
+                {reservas.length === 0 ? (
+                  <p className="text-gray-500">
+                    Nenhuma reserva para esse dia
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {reservas.map((r) => (
+                      <div
+                        key={r.id}
+                        className="bg-blue-50 border border-blue-100 p-4 rounded-xl"
+                      >
+                        <p className="font-semibold text-gray-800">
+                          {r.hora_inicio} - {r.hora_fim}
+                        </p>
+
+                        <p className="text-sm text-gray-700">
+                          {r.usuario_nome}
+                        </p>
+
+                        <p className="text-sm text-gray-500">
+                          {r.disciplina}
+                        </p>
+
+                        <p className="text-xs text-gray-400">
+                          {r.turno} • Aula {r.aula_numero}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
