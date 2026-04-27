@@ -24,10 +24,11 @@ export async function getReport(
       break;
 
     case "weekly":
-      if (!options?.startDate || !options?.endDate) {
-        throw new Error("Parâmetros 'startDate' e 'endDate' são obrigatórios");
+      if (!options?.startDate) {
+        throw new Error("Parâmetro 'data_inicio' é obrigatório");
       }
-      url = `${BASE_URL}/api/relatorios/semanal?data_inicio=${options.startDate}&data_fim=${options.endDate}`;
+
+      url = `${BASE_URL}/api/relatorios/semanal?data_inicio=${options.startDate}`;
       break;
 
     case "monthly":
