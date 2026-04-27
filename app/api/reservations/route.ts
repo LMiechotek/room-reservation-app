@@ -15,8 +15,6 @@ export async function GET(request: NextRequest) {
         cache: "no-store",
     },
   );
-  console.log("SEARCH:", search);
-  console.log("URL FINAL:", `${process.env.NEXT_PUBLIC_API_URL}/api/reservas${search}`);
 
 const data = await response.json();
 
