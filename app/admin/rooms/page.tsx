@@ -240,6 +240,9 @@ export default function RoomsPanel() {
 
       data.equipamentos?.forEach((eq: any) => {
         selected[eq.id] = eq.quantidade;
+        if (data.tipo_sala === "laboratorio" && eq.nome === "Computadores") {
+          setMachines(eq.quantidade);
+        }
       });
 
       setEquipmentsSelected(selected);
