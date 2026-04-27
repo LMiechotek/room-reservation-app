@@ -119,6 +119,7 @@ export default function ReportsPage() {
           data: getLocalDateISO(),
           total_reservas: data?.resumo?.total_reservas ?? 0,
           canceladas: data?.resumo?.canceladas ?? 0,
+          concluidas: data?.resumo?.concluidas ?? 0,
         },
       ]
       : period === "semester"
@@ -285,6 +286,10 @@ export default function ReportsPage() {
         </AnimatedItem>
 
         <AnimatedItem>
+          <FancyCard title="Concluídas" value={data.resumo?.concluidas ?? 0} gradient="from-green-500 to-emerald-500" />
+        </AnimatedItem>
+
+        <AnimatedItem>
           <FancyCard title="Canceladas" value={data.resumo?.canceladas ?? 0} gradient="from-red-500 to-pink-500" />
         </AnimatedItem>
 
@@ -302,6 +307,7 @@ export default function ReportsPage() {
             <Tooltip contentStyle={{ borderRadius: "12px", border: "none" }} />
             <Bar dataKey="total_reservas" fill="#3B82F6" radius={[6, 6, 0, 0]} />
             <Bar dataKey="canceladas" fill="#EF4444" radius={[6, 6, 0, 0]} />
+            <Bar dataKey="concluidas" fill="#10B981" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ChartCard>
 
@@ -322,6 +328,13 @@ export default function ReportsPage() {
               type="monotone"
               dataKey="total_reservas"
               stroke="#6366F1"
+              strokeWidth={3}
+              dot={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="concluidas"
+              stroke="#10B981"
               strokeWidth={3}
               dot={false}
             />
