@@ -12,10 +12,11 @@ export default function ReportsPage() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [semester, setSemester] = useState(1);
   const [selectedDate, setSelectedDate] = useState(getLocalDateISO());
+  const [weekStartDate, setWeekStartDate] = useState(getLocalDateISO());
 
   useEffect(() => {
     loadData();
-  }, [period, month, year, semester, selectedDate]);
+  }, [period, month, year, semester, selectedDate, weekStartDate]);
 
   function getLocalDateISO() {
     const d = new Date();
@@ -24,20 +25,6 @@ export default function ReportsPage() {
     const day = String(d.getDate()).padStart(2, "0");
 
     return `${year}-${month}-${day}`;
-  }
-
-  function getWeekRange() {
-    const now = new Date();
-    const first = new Date(now);
-    first.setDate(now.getDate() - now.getDay());
-
-    const last = new Date(first);
-    last.setDate(first.getDate() + 6);
-
-    return {
-      startDate: getLocalDateISOFromDate(first),
-      endDate: getLocalDateISOFromDate(last),
-    };
   }
 
   function getLocalDateISOFromDate(date: Date) {
@@ -60,10 +47,8 @@ export default function ReportsPage() {
           break;
 
         case "weekly":
-          const { startDate, endDate } = getWeekRange();
           res = await getReport("weekly", {
-            startDate,
-            endDate,
+            startDate: weekStartDate,
           });
           break;
 
@@ -93,8 +78,15 @@ export default function ReportsPage() {
     }
 
     if (period === "weekly") {
-      const { startDate, endDate } = getWeekRange();
-      return `${base}/semanal?data_inicio=${startDate}&data_fim=${endDate}&formato=${format}`;
+      const startDate = weekStartDate;
+
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+
+      const endDate = getLocalDateISOFromDate(end);
+
+      return `${base}/semanal?data_inicio=${weekStartDate}&formato=${format}`;
     }
 
     if (period === "monthly") {
@@ -215,6 +207,16 @@ export default function ReportsPage() {
           <option value="monthly">Mensal</option>
           <option value="semester">Semestral</option>
         </select>
+        {period === "weekly" && (
+          <div className="flex flex-col">
+            <input
+              type="date"
+              value={weekStartDate}
+              onChange={(e) => setWeekStartDate(e.target.value)}
+              className="bg-white border border-gray-300 px-4 py-2 rounded-xl shadow-sm"
+            />
+          </div>
+        )}
         {period === "daily" && (
           <input
             type="date"
@@ -244,6 +246,26 @@ export default function ReportsPage() {
               value={year}
               onChange={(e) => setYear(Number(e.target.value))}
               className="border text-center border-gray-300 px-3 py-2 rounded-xl w-24 shadow-sm"
+            />
+          </motion.div>
+        )}
+
+        {period === "semester" && (
+          <motion.div className="flex gap-2">
+            <select
+              value={semester}
+              onChange={(e) => setSemester(Number(e.target.value))}
+              className="border px-3 py-2 rounded-xl"
+            >
+              <option value={1}>1º Semestre</option>
+              <option value={2}>2º Semestre</option>
+            </select>
+
+            <input
+              type="number"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="border px-3 py-2 rounded-xl w-24"
             />
           </motion.div>
         )}
